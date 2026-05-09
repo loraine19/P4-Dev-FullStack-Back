@@ -1,3 +1,10 @@
+export interface UserPublic {
+  id: number;
+  email: string;
+  name: string;
+}
+
 export interface AuthResponse {
-  access_token: string;
+  user: UserPublic;
+  access_token?: string;
 }
