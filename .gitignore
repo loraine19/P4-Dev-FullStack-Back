@@ -3,3 +3,6 @@ dist/
 .env
 uploads/
 *.log
+logs/
+test-results.json
+postman/newman-report.html

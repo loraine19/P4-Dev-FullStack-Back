@@ -1,11 +1,7 @@
-import {
-  ConflictException,
-  Injectable,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { ConflictException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma/prisma.service';
-import { Response } from 'express';
+import type { Response } from 'express';
 import * as bcrypt from 'bcrypt';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
@@ -18,8 +14,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
-  // ─── Helpers privés ───────────────────────────────────────────────────────
-
+  /* GENERATE TOKEN */
   private async generateToken(sub: number): Promise<string> {
     return this.jwtService.signAsync(
       { sub },
@@ -30,6 +25,7 @@ export class AuthService {
     );
   }
 
+  /* SET AUTH COOKIE */
   private setAuthCookie(res: Response, token: string): void {
     const cookieName = process.env.ACCESS_COOKIE_NAME ?? 'access_token';
     const maxAge = parseInt(process.env.COOKIE_MAX_AGE ?? '604800000');
@@ -41,65 +37,44 @@ export class AuthService {
     });
   }
 
+  /* CLEAR AUTH COOKIE */
   private clearAuthCookie(res: Response): void {
     const cookieName = process.env.ACCESS_COOKIE_NAME ?? 'access_token';
     res.clearCookie(cookieName);
   }
 
-  private toUserPublic(user: {
-    id: number;
-    email: string;
-    name: string;
-  }): UserPublic {
+  /* TO USER PUBLIC */
+  private toUserPublic(user: { id: number; email: string; name: string }): UserPublic {
     return { id: user.id, email: user.email, name: user.name };
   }
 
-  // ─── Endpoints ────────────────────────────────────────────────────────────
-
-  async register(dto: RegisterDto): Promise<{ message: string }> {
-    const exists = await this.prisma.user.findUnique({
-      where: { email: dto.email },
-    });
+  /* REGISTER */
+  async register(dto: RegisterDto): Promise<void> {
+    const { email, password, name } = dto;
+    const exists = await this.prisma.user.findUnique({ where: { email } });
     if (exists) throw new ConflictException('Email déjà utilisé');
-
-    const passwordHash = await bcrypt.hash(dto.password, 10);
-    await this.prisma.user.create({
-      data: { email: dto.email, passwordHash, name: dto.name },
-    });
-
-    return { message: 'Compte créé avec succès' };
+    const passwordHash = await bcrypt.hash(password, 10);
+    await this.prisma.user.create({ data: { email, passwordHash, name } });
   }
 
-  async login(
-    dto: LoginDto,
-    res: Response,
-  ): Promise<AuthResponse> {
-    const user = await this.prisma.user.findUnique({
-      where: { email: dto.email },
-    });
+  /* LOGIN */
+  async login(dto: LoginDto, res: Response): Promise<AuthResponse> {
+    const { email, password, isMobile } = dto;
+    const user = await this.prisma.user.findUnique({ where: { email } });
     if (!user) throw new UnauthorizedException('Identifiants incorrects');
-
-    const valid = await bcrypt.compare(dto.password, user.passwordHash);
+    const valid = await bcrypt.compare(password, user.passwordHash);
     if (!valid) throw new UnauthorizedException('Identifiants incorrects');
-
     const token = await this.generateToken(user.id);
     const userPublic = this.toUserPublic(user);
-
-    if (dto.isMobile) {
-      return { user: userPublic, access_token: token };
-    }
-
+    if (isMobile) return { user: userPublic, access_token: token };
     this.setAuthCookie(res, token);
     return { user: userPublic };
   }
 
-  async logout(
-    userId: number,
-    res: Response,
-  ): Promise<{ message: string }> {
-    // userId est issu du guard — on s'assure que l'utilisateur existe
+  /* LOGOUT */
+  async logout(userId: number, res: Response): Promise<void> {
+    // guard already verified the token — findUniqueOrThrow ensures user still exists
     await this.prisma.user.findUniqueOrThrow({ where: { id: userId } });
     this.clearAuthCookie(res);
-    return { message: 'Déconnexion réussie' };
   }
 }

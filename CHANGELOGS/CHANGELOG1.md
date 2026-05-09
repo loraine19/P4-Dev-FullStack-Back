@@ -94,5 +94,3 @@ Initialiser le backend NestJS avec Prisma, Docker PostgreSQL, la structure modul
 | Tâche cron nettoyage            | ✅     |
 | Guards / filtres / décorateurs  | ✅     |
 | .env.example + README           | ✅     |
-
-

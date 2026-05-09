@@ -2,10 +2,16 @@ import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import cookieParser from 'cookie-parser';
 import { AppModule } from './app.module';
+import { HttpExceptionFilter } from './common/filters/http-exception.filter';
+import { PrismaExceptionFilter } from './common/filters/prisma-exception.filter';
+import { ErrorFilter } from './common/filters/error.filter';
+import { LoggerService } from './common/logger/logger.service';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, { bufferLogs: true });
+  const logger = app.get(LoggerService);
 
+  app.useLogger(logger);
   app.use(cookieParser());
 
   app.enableCors({
@@ -15,6 +21,13 @@ async function bootstrap() {
 
   app.useGlobalPipes(
     new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }),
+  );
+
+  // order: most specific first (Prisma → Error → Http)
+  app.useGlobalFilters(
+    new PrismaExceptionFilter(logger),
+    new ErrorFilter(logger),
+    new HttpExceptionFilter(logger),
   );
 
   app.setGlobalPrefix('api/v1');

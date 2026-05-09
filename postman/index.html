@@ -1,0 +1,251 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Postman Test Results</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        background: #f5f5f5;
+        padding: 20px;
+      }
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        padding: 30px;
+      }
+      h1 {
+        color: #333;
+        margin-bottom: 10px;
+        font-size: 28px;
+      }
+      .timestamp {
+        color: #666;
+        font-size: 14px;
+        margin-bottom: 30px;
+      }
+      .summary {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin-bottom: 40px;
+      }
+      .stat {
+        background: #f9f9f9;
+        border-left: 4px solid #007bff;
+        padding: 15px;
+        border-radius: 4px;
+      }
+      .stat.pass {
+        border-left-color: #28a745;
+      }
+      .stat.fail {
+        border-left-color: #dc3545;
+      }
+      .stat-label {
+        font-size: 12px;
+        color: #666;
+        text-transform: uppercase;
+      }
+      .stat-value {
+        font-size: 32px;
+        font-weight: bold;
+        color: #333;
+        margin-top: 5px;
+      }
+      .stat.pass .stat-value {
+        color: #28a745;
+      }
+      .stat.fail .stat-value {
+        color: #dc3545;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+      }
+      th {
+        background: #f0f0f0;
+        padding: 12px;
+        text-align: left;
+        font-weight: 600;
+        font-size: 14px;
+        border-bottom: 2px solid #ddd;
+      }
+      td {
+        padding: 12px;
+        border-bottom: 1px solid #eee;
+      }
+      tr:hover {
+        background: #f9f9f9;
+      }
+      .status-pass {
+        color: #28a745;
+        font-weight: 600;
+      }
+      .status-fail {
+        color: #dc3545;
+        font-weight: 600;
+      }
+      .badge {
+        display: inline-block;
+        padding: 4px 8px;
+        border-radius: 3px;
+        font-size: 12px;
+        font-weight: 600;
+      }
+      .badge-pass {
+        background: #d4edda;
+        color: #155724;
+      }
+      .badge-fail {
+        background: #f8d7da;
+        color: #721c24;
+      }
+      .error {
+        background: #fff3cd;
+        border-left: 4px solid #ffc107;
+        padding: 15px;
+        border-radius: 4px;
+        margin: 20px 0;
+        color: #856404;
+      }
+      .loading {
+        text-align: center;
+        padding: 40px;
+        color: #666;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>🚀 Postman Test Results</h1>
+      <div id="content">
+        <div class="loading">Chargement du rapport...</div>
+      </div>
+    </div>
+
+    <script>
+      async function loadResults() {
+        try {
+          const response = await fetch('./test-results.json');
+          if (!response.ok) {
+            throw new Error(`Rapport non trouvé (${response.status})`);
+          }
+          const data = await response.json();
+          renderResults(data);
+        } catch (error) {
+          document.getElementById('content').innerHTML = `
+          <div class="error">
+            <strong>Erreur:</strong> ${error.message}<br>
+            Assurez-vous d'avoir exécuté:<br>
+            <code>newman run postman/auth.postman_collection.json -e postman/local.postman_environment.json --reporters cli,json --reporter-json-export ./test-results.json</code>
+          </div>
+        `;
+        }
+      }
+
+      function renderResults(data) {
+        const { run } = data;
+        const stats = run.stats;
+        const assertions = stats.assertions;
+        const requests = stats.requests;
+
+        const timestamp = new Date(run.timestamp).toLocaleString('fr-FR');
+        const passRate =
+          assertions.total > 0
+            ? Math.round((assertions.pass / assertions.total) * 100)
+            : 0;
+
+        let html = `
+        <div class="timestamp">Généré: ${timestamp}</div>
+        
+        <div class="summary">
+          <div class="stat pass">
+            <div class="stat-label">Requêtes</div>
+            <div class="stat-value">${requests.total}</div>
+          </div>
+          <div class="stat ${assertions.failed > 0 ? 'fail' : 'pass'}">
+            <div class="stat-label">Assertions</div>
+            <div class="stat-value">${assertions.pass} / ${assertions.total}</div>
+          </div>
+          <div class="stat">
+            <div class="stat-label">Taux de réussite</div>
+            <div class="stat-value">${passRate}%</div>
+          </div>
+          <div class="stat">
+            <div class="stat-label">Temps total</div>
+            <div class="stat-value">${run.timings.completed - run.timings.started}ms</div>
+          </div>
+        </div>
+      `;
+
+        if (run.failures && run.failures.length > 0) {
+          html +=
+            '<h2 style="margin-top: 30px; margin-bottom: 15px; color: #dc3545;">Erreurs</h2>';
+          html += '<table>';
+          html += '<tr><th>Requête</th><th>Test</th><th>Message</th></tr>';
+          run.failures.forEach((failure) => {
+            html += `
+            <tr>
+              <td>${failure.source.name}</td>
+              <td>${failure.error.name}</td>
+              <td><span class="status-fail">● ${failure.error.message}</span></td>
+            </tr>
+          `;
+          });
+          html += '</table>';
+        }
+
+        html +=
+          '<h2 style="margin-top: 30px; margin-bottom: 15px;">Détail des requêtes</h2>';
+        html += '<table>';
+        html +=
+          '<tr><th>Requête</th><th>Statut</th><th>Code</th><th>Temps</th><th>Assertions</th></tr>';
+
+        run.executions.forEach((execution) => {
+          const req = execution.item.name || execution.request.url;
+          const response = execution.response;
+          const code = response?.code || 'N/A';
+          const time = execution.times?.totalTime || 0;
+          const assertions = execution.assertionResults
+            ? execution.assertionResults.length
+            : 0;
+          const passed = execution.assertionResults
+            ? execution.assertionResults.filter((a) => a.error === null).length
+            : 0;
+
+          const statusClass = execution.requestError ? 'fail' : 'pass';
+          const statusBadge = execution.requestError
+            ? '<span class="badge badge-fail">✕ FAIL</span>'
+            : '<span class="badge badge-pass">✓ PASS</span>';
+
+          html += `
+          <tr>
+            <td>${req}</td>
+            <td>${statusBadge}</td>
+            <td>${code}</td>
+            <td>${time}ms</td>
+            <td>${passed}/${assertions}</td>
+          </tr>
+        `;
+        });
+        html += '</table>';
+
+        document.getElementById('content').innerHTML = html;
+      }
+
+      loadResults();
+    </script>
+  </body>
+</html>

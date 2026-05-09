@@ -5,12 +5,12 @@
 **Objectif** :
 Ajouter l'authentification complète sans Passport — guard manuel hybride acceptant cookie httpOnly (web) ou Bearer header (mobile).
 
-| Thème                      | Ce qui a été livré                                             | Commits |
-| :------------------------- | :------------------------------------------------------------- | :------ |
-| Auth register/login/logout | Endpoints complets, bcrypt, cookie hybride                     | 3e53979 |
-| Guard hybride              | Cookie httpOnly OU Bearer header, un seul guard                | 3e53979 |
-| Configuration              | cookieParser, CORS credentials, ValidationPipe, prefix api/v1  | 3e53979 |
-| DTOs validés               | class-validator sur LoginDto (+ isMobile) et RegisterDto       | 3e53979 |
+| Thème                      | Ce qui a été livré                                            | Commits |
+| :------------------------- | :------------------------------------------------------------ | :------ |
+| Auth register/login/logout | Endpoints complets, bcrypt, cookie hybride                    | 3e53979 |
+| Guard hybride              | Cookie httpOnly OU Bearer header, un seul guard               | 3e53979 |
+| Configuration              | cookieParser, CORS credentials, ValidationPipe, prefix api/v1 | 3e53979 |
+| DTOs validés               | class-validator sur LoginDto (+ isMobile) et RegisterDto      | 3e53979 |
 
 ---
 
@@ -88,3 +88,30 @@ Ajouter l'authentification complète sans Passport — guard manuel hybride acce
 | Guard hybride cookie OU Bearer                        | ✅     |
 | register / login hybride / logout                     | ✅     |
 | DTOs validés class-validator                          | ✅     |
+
+---
+
+## **4. Validation API Newman + rapport HTML autonome**
+
+**Commit** : à renseigner
+
+### **Ce qui a été mis en place**
+
+- Collection Postman Auth ajoutée (`register`, `duplicate`, `login web`, `login mobile`, `logout`)
+- Environnement local Postman versionné
+- Pré-script sur `Register - success` pour générer un email unique à chaque run (évite les `409` liés aux doublons)
+- Script npm `newman:auth:report` pour générer un rapport HTML autonome lisible directement
+- Mémo CLI mis à jour avec commandes NestJS/Newman et emplacement du rapport
+
+### **Résultat de validation**
+
+- Newman : **11 assertions / 11 passées**
+- Rapport HTML généré : `postman/newman-report.html`
+
+### **Fichiers ajoutés / modifiés**
+
+- `postman/auth.postman_collection.json`
+- `postman/local.postman_environment.json`
+- `postman/newman-report.html`
+- `NEWMAN_CLI.md`
+- `package.json` (script `newman:auth:report`)
