@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
-import { ScheduleModule } from '@nestjs/schedule';
 import { CronTaskService } from './cron-task.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { LoggerModule } from '../common/logger/logger.module';
 
 @Module({
-  imports: [ScheduleModule],
+  imports: [LoggerModule],
   providers: [CronTaskService, PrismaService],
 })
 export class CronTaskModule {}

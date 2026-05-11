@@ -1,10 +1,13 @@
-export interface UserPublic {
+/* IUSER PUBLIC */
+export interface IUserPublic {
   id: number;
   email: string;
   name: string;
 }
 
-export interface AuthResponse {
-  user: UserPublic;
+/* IAUTH RESPONSE */
+export interface IAuthResponse {
+  user: IUserPublic;
   access_token?: string;
 }
+

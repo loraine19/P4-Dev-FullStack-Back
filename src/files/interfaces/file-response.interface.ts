@@ -1,4 +1,5 @@
-export interface FileResponse {
+/* IFILE RESPONSE */
+export interface IFileResponse {
   id: number;
   originalName: string;
   size: number;
@@ -8,3 +9,4 @@ export interface FileResponse {
   expiresAt: Date;
   createdAt: Date;
 }
+

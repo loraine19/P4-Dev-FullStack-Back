@@ -1,96 +1,82 @@
-# **CHANGELOG**
+# CHANGELOG — main (initial scaffold)
 
-## **Branche main — Initial scaffold**
+**Sprint step** : STEP 2 — Initialisation des applications
+**Branche** : `main`
 
-**Objectif** :
-Initialiser le backend NestJS avec Prisma, Docker PostgreSQL, la structure modulaire complète et une tâche cron de nettoyage automatique.
-
-| Thème                | Ce qui a été livré                                               | Commits |
-| :------------------- | :--------------------------------------------------------------- | :------ |
-| Structure NestJS     | Modules auth / files / download / tags / prisma / cron-task      | babf2e2 |
-| Base de données      | Prisma 6 + PostgreSQL 16 Docker + migration init (4 tables)      | babf2e2 |
-| Cron                 | Suppression automatique des fichiers expirés (toutes les heures) | babf2e2 |
-| Sécurité (squelette) | Guards, filtres d'exception, décorateurs communs                 | babf2e2 |
-| Configuration        | .env.example, docker-compose.yml, README                         | babf2e2 |
+**Objectif** : Socle backend NestJS — structure modulaire, Prisma + PostgreSQL Docker, cron de nettoyage, squelettes de tous les modules métier.
 
 ---
 
-## **1. Structure NestJS + Prisma**
+## Ce qui est en place
 
-**Commit** : babf2e2
-
-### **Ce qui a été mis en place**
-
-- NestJS 11 + TypeScript strict
-- Prisma 6 avec datasource PostgreSQL — modèles : `User`, `File`, `Tag`, `FileTag` (PK composite)
-- Docker Compose PostgreSQL 16 avec healthcheck
-- Migration `init` exécutée — 4 tables en base
-- Prefix global `api/v1` prévu dans `main.ts`
-
-### **Fichiers créés**
-
-- `prisma/schema.prisma`
-- `prisma/migrations/20260509103448_init/migration.sql`
-- `docker-compose.yml`
-- `src/prisma/prisma.service.ts`
-- `src/main.ts`
-- `src/app.module.ts`
+| Thème | Ce qui est opérationnel |
+| :--- | :--- |
+| Structure NestJS | 6 modules : auth / files / download / tags / prisma / cron-task |
+| Base de données | Prisma 6 + PostgreSQL 16 Docker — migration init, 4 tables |
+| Cron | Suppression automatique des fichiers expirés (toutes les heures) |
+| Squelettes communs | Guards, filtres d'exception, décorateur `@CurrentUser()`, logger middleware |
+| Configuration | `.env.example`, `docker-compose.yml`, prefix `api/v1` |
 
 ---
 
-## **2. Modules métier (squelettes)**
+## Choix techniques
 
-**Commit** : babf2e2
+### Prisma over TypeORM
 
-### **Ce qui a été mis en place**
+Prisma 6 — typage généré depuis le schéma, migrations SQL versionnées, client fortement typé. Pas de TypeORM malgré la mention dans le SPRINT_PLAN — choix justifié par la maturité du tooling et la lisibilité du schéma `.prisma`.
 
-- Modules `auth`, `files`, `download`, `tags` avec controllers, services, DTOs et interfaces
-- Middleware logger sur toutes les routes
-- Filtres d'exception globaux (HTTP + Prisma)
-- Décorateur `@CurrentUser()` et interface `RequestWithUser`
-- Interface `JwtPayload { sub, email }`
+### Modèle de données
 
-### **Fichiers créés**
+4 tables : `User`, `File`, `Tag`, `FileTag` (PK composite `[fileId, tagId]`).
+- `File.userId` nullable + `onDelete: SetNull` — un fichier survit à la suppression du compte
+- `Tag.userId` + `onDelete: Cascade` — les tags appartiennent à l'utilisateur
+- `@@unique([name, userId])` sur `Tag` — pas de doublon de tag par utilisateur
 
-- `src/auth/auth.module.ts` · `auth.controller.ts` · `auth.service.ts`
-- `src/auth/dto/login.dto.ts` · `register.dto.ts`
-- `src/auth/interfaces/auth-response.interface.ts`
-- `src/auth/strategies/jwt.strategy.ts`
-- `src/files/files.module.ts` · `files.controller.ts` · `files.service.ts`
-- `src/download/download.module.ts` · `download.controller.ts` · `download.service.ts`
-- `src/tags/tags.module.ts` · `tags.controller.ts` · `tags.service.ts`
-- `src/common/guards/jwt-auth.guard.ts` · `optional-jwt-auth.guard.ts`
-- `src/common/decorators/current-user.decorator.ts`
-- `src/common/filters/http-exception.filter.ts` · `prisma-exception.filter.ts`
-- `src/common/middlewares/logger.middleware.ts`
-- `src/common/interfaces/jwt-payload.interface.ts` · `request-with-user.interface.ts`
+### Cron de nettoyage
 
----
+`@Cron(CronExpression.EVERY_HOUR)` dans `CronTaskService` :
+1. `findMany` où `expiresAt < now()`
+2. `fs.unlinkSync` physique par fichier
+3. `deleteMany` Prisma
+4. Log du résultat
 
-## **3. Tâche cron — nettoyage fichiers expirés**
+Choix : suppression synchrone fichier par fichier (volume faible attendu) — pas de batch async pour simplifier la gestion d'erreur.
 
-**Commit** : babf2e2
+### PrismaService
 
-### **Ce qui a été mis en place**
-
-- `@nestjs/schedule` installé et `ScheduleModule.forRoot()` dans `AppModule`
-- `CronTaskModule` avec `CronTaskService` : `@Cron(EVERY_HOUR)` → `findMany` où `expiresAt < now()` → `fs.unlinkSync` physique → `deleteMany` Prisma → Logger
-
-### **Fichiers créés**
-
-- `src/cron-task/cron-task.module.ts`
-- `src/cron-task/cron-task.service.ts`
+`extends PrismaClient implements OnModuleInit` — connexion établie au démarrage du module, pas de singleton global.
 
 ---
 
-## **Récapitulatif final**
+## Structure des fichiers notables
 
-| Thème                           | Statut |
-| :------------------------------ | :----- |
-| Structure NestJS modulaire      | ✅     |
-| Prisma 6 + PostgreSQL 16 Docker | ✅     |
-| Migration init (4 tables)       | ✅     |
-| Modules métier squelettes       | ✅     |
-| Tâche cron nettoyage            | ✅     |
-| Guards / filtres / décorateurs  | ✅     |
-| .env.example + README           | ✅     |
+```
+prisma/
+  schema.prisma                  — modèles User / File / Tag / FileTag
+  migrations/20260509103448_init — migration SQL initiale
+docker-compose.yml               — PostgreSQL 16 + healthcheck
+src/
+  main.ts                        — prefix api/v1 (ValidationPipe + auth câblés en feat/auth)
+  app.module.ts                  — imports des modules (complets en feat/auth)
+  prisma/prisma.service.ts       — extends PrismaClient, onModuleInit → $connect
+  cron-task/
+    cron-task.service.ts         — @Cron EVERY_HOUR → nettoyage fichiers expirés
+  common/
+    guards/jwt-auth.guard.ts            — squelette (implémenté en feat/auth)
+    guards/optional-jwt-auth.guard.ts   — squelette
+    decorators/current-user.decorator.ts
+    filters/http-exception.filter.ts
+    filters/prisma-exception.filter.ts
+    middlewares/logger.middleware.ts
+    logger/logger.service.ts · logger.module.ts
+  auth/ files/ download/ tags/   — squelettes module/controller/service/dto/interfaces
+```
+
+---
+
+## Variables d'environnement requises
+
+```env
+DATABASE_URL=
+NODE_ENV=
+```

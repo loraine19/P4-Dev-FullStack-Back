@@ -23,7 +23,7 @@ async function bootstrap() {
     new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }),
   );
 
-  // order: most specific first (Prisma → Error → Http)
+  // NestJS routes each exception to the most specific @Catch() type — registration order does not matter
   app.useGlobalFilters(
     new PrismaExceptionFilter(logger),
     new ErrorFilter(logger),
@@ -34,4 +34,5 @@ async function bootstrap() {
 
   await app.listen(process.env.PORT ?? 3000);
 }
-bootstrap();
+
+void bootstrap();
