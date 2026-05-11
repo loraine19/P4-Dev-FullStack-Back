@@ -8,7 +8,10 @@ export interface IApiResponse<T = null> {
 /* API RESPONSE */
 export class ApiResponse {
   /* SUCCESS */
-  static success<T = null>(message: string, data: T | null = null): IApiResponse<T> {
+  static success<T = null>(
+    message: string,
+    data: T | null = null,
+  ): IApiResponse<T> {
     return { status: 'success', message, data };
   }
 

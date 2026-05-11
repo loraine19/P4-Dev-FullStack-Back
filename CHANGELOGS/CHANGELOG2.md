@@ -1,117 +1,102 @@
-# **CHANGELOG**
+# CHANGELOG — feat/auth
 
-## **Branche feat/auth — Auth hybride (cookie httpOnly + Bearer)**
+**Sprint step** : STEP 3 — US03 + US04 (gestion utilisateur, authentification)
+**Branche** : `feat/auth`
 
-**Objectif** :
-Ajouter l'authentification complète sans Passport — guard manuel hybride acceptant cookie httpOnly (web) ou Bearer header (mobile).
-
-| Thème                      | Ce qui a été livré                                            | Commits |
-| :------------------------- | :------------------------------------------------------------ | :------ |
-| Auth register/login/logout | Endpoints complets, bcrypt, cookie hybride                    | 3e53979 |
-| Guard hybride              | Cookie httpOnly OU Bearer header, un seul guard               | 3e53979 |
-| Configuration              | cookieParser, CORS credentials, ValidationPipe, prefix api/v1 | 3e53979 |
-| DTOs validés               | class-validator sur LoginDto (+ isMobile) et RegisterDto      | 3e53979 |
+**Objectif** : Authentification complète sans Passport — guard manuel hybride cookie httpOnly (web) + Bearer token (mobile), validation globale, filtres d'exception.
 
 ---
 
-## **1. Configuration globale**
+## Ce qui est en place
 
-**Commit** : 3e53979
-
-### **Ce qui a été mis en place**
-
-- `cookie-parser` activé dans `main.ts`
-- CORS `credentials: true`, origine `FRONTEND_URL` depuis `.env`
-- `ValidationPipe` global (whitelist + forbidNonWhitelisted)
-- Prefix global `api/v1`
-
-### **Fichiers modifiés**
-
-- `src/main.ts`
-- `.env.example` (ajout `JWT_SECRET`, `JWT_EXPIRES_IN`, `FRONTEND_URL`, `ACCESS_COOKIE_NAME`, `COOKIE_MAX_AGE`)
+| Thème | Ce qui est opérationnel |
+| :--- | :--- |
+| Auth endpoints | `POST /api/v1/auth/register` · `POST /api/v1/auth/login` · `POST /api/v1/auth/logout` |
+| Guard hybride | Cookie httpOnly OU Bearer header — un seul `JwtAuthGuard` |
+| Guard optionnel | `OptionalJwtAuthGuard` — routes publiques avec user optionnel |
+| Validation globale | `ValidationPipe` (whitelist + forbidNonWhitelisted) sur tous les endpoints |
+| Filtres d'exception | `HttpExceptionFilter` + `PrismaExceptionFilter` enregistrés globalement |
+| Logger middleware | `LoggerMiddleware` câblé via `NestModule.configure()` sur toutes les routes |
+| ApiResponse | Helper statique `ApiResponse.success(msg, data?)` / `.error(msg)` — shape uniforme `{ status, message, data }` |
+| Tests API | Collection Postman + Newman — 11 assertions / 11 passées — rapport HTML versionné |
 
 ---
 
-## **2. Guard hybride manuel**
+## Choix techniques
 
-**Commit** : 3e53979
+### Guard hybride sans Passport
 
-### **Ce qui a été mis en place**
+`JwtAuthGuard` implémente `CanActivate` directement — pas de Passport, pas de Strategy.
 
-- `JwtAuthGuard` : `CanActivate` manuel — `extractToken()` helper privé qui lit cookie OU Bearer
-- `OptionalJwtAuthGuard` : extends `JwtAuthGuard`, silencieux si pas de token
-- `JwtPayload` simplifié à `{ sub: number; iat?: number; exp?: number }`
-- Suppression de `jwt.strategy.ts` (Passport non nécessaire)
+- `extractToken()` : lit le cookie d'abord (`req.cookies[ACCESS_COOKIE_NAME]`), puis le header `Authorization: Bearer`
+- Un seul guard couvre web et mobile sans duplication
+- `OptionalJwtAuthGuard` extend `JwtAuthGuard` et absorbe les erreurs — routes publiques avec contenu différent selon connexion
 
-### **Fichiers modifiés**
+### Login hybride
 
-- `src/common/guards/jwt-auth.guard.ts`
-- `src/common/guards/optional-jwt-auth.guard.ts`
-- `src/common/interfaces/jwt-payload.interface.ts`
+`isMobile?: boolean` dans `LoginDto` pilote le comportement de `login()` :
+- `isMobile: false` (défaut) → cookie httpOnly posé côté serveur, `access_token` absent de la réponse
+- `isMobile: true` → pas de cookie, `access_token` retourné dans le body
 
-### **Fichiers supprimés**
+### Stockage token
 
-- `src/auth/strategies/jwt.strategy.ts`
+- Cookie : `httpOnly: true`, `secure` selon `NODE_ENV`, `sameSite: strict`, durée depuis `.env`
+- Payload JWT : `{ sub: userId }` uniquement — pas d'email (minimisation des données)
 
----
+### Validation DTOs
 
-## **3. AuthService + AuthModule**
+`class-validator` sur tous les DTOs. `strictPropertyInitialization: false` dans `tsconfig.json` — les DTOs sont hydratés par le `ValidationPipe`, jamais par constructeur.
 
-**Commit** : 3e53979
+### Filtres d'exception
 
-### **Ce qui a été mis en place**
+- `HttpExceptionFilter` — formate toutes les exceptions NestJS en `{ status, message }`
+- `PrismaExceptionFilter` — intercepte les erreurs Prisma (P2002 unique, P2025 not found...) et les traduit en HTTP lisibles
 
-- `register()` : hash bcrypt, retourne `{ message }`
-- `login()` : vérifie credentials → `isMobile: false` → cookie httpOnly + `{ user }` / `isMobile: true` → `{ user, access_token }`
-- `logout()` : efface cookie, retourne `{ message }`
-- Helpers privés : `generateToken()`, `setAuthCookie()`, `clearAuthCookie()`
-- `JwtModule.registerAsync` (env chargé avant init du module)
-- `AuthResponse` : `access_token?` optionnel + `user: UserPublic`
+### ApiResponse pattern
 
-### **Fichiers modifiés**
-
-- `src/auth/auth.service.ts`
-- `src/auth/auth.module.ts`
-- `src/auth/auth.controller.ts`
-- `src/auth/dto/login.dto.ts` (ajout `isMobile?`, class-validator)
-- `src/auth/dto/register.dto.ts` (class-validator)
-- `src/auth/interfaces/auth-response.interface.ts`
-- `src/app.module.ts` (ajout `AuthModule`)
+Messages dans le **controller** uniquement — le service retourne des données brutes.
+`ApiResponse.success(message, data?)` / `.error(message)` dans le controller, jamais dans le service.
 
 ---
 
-## **Récapitulatif final**
+## Structure des fichiers notables
 
-| Thème                                                 | Statut |
-| :---------------------------------------------------- | :----- |
-| Configuration globale (cookies, CORS, ValidationPipe) | ✅     |
-| Guard hybride cookie OU Bearer                        | ✅     |
-| register / login hybride / logout                     | ✅     |
-| DTOs validés class-validator                          | ✅     |
+```
+src/
+  main.ts                          — cookie-parser, CORS, ValidationPipe, prefix api/v1
+  app.module.ts                    — NestModule.configure() → LoggerMiddleware sur *
+  auth/
+    auth.controller.ts             — register / login / logout / me
+    auth.service.ts                — register(), login(), logout() + helpers privés
+    dto/login.dto.ts               — isMobile?: boolean (hybrid flag)
+    dto/register.dto.ts
+    interfaces/auth-response.interface.ts  — IUserPublic, IAuthResponse
+  common/
+    guards/jwt-auth.guard.ts       — extractToken() cookie OU Bearer
+    guards/optional-jwt-auth.guard.ts
+    decorators/current-user.decorator.ts   — @CurrentUser() → IJwtPayload
+    filters/http-exception.filter.ts
+    filters/prisma-exception.filter.ts
+    helpers/api-response.ts        — ApiResponse.success / .error
+    interfaces/jwt-payload.interface.ts    — IJwtPayload { sub, iat?, exp? }
+    middlewares/logger.middleware.ts
+    logger/logger.service.ts · logger.module.ts
+  prisma/prisma.service.ts         — extends PrismaClient, onModuleInit → $connect
+postman/
+  auth.postman_collection.json     — 5 scénarios register/login/logout
+  newman-report.html               — rapport de validation (11/11)
+```
 
 ---
 
-## **4. Validation API Newman + rapport HTML autonome**
+## Variables d'environnement requises
 
-**Commit** : à renseigner
-
-### **Ce qui a été mis en place**
-
-- Collection Postman Auth ajoutée (`register`, `duplicate`, `login web`, `login mobile`, `logout`)
-- Environnement local Postman versionné
-- Pré-script sur `Register - success` pour générer un email unique à chaque run (évite les `409` liés aux doublons)
-- Script npm `newman:auth:report` pour générer un rapport HTML autonome lisible directement
-- Mémo CLI mis à jour avec commandes NestJS/Newman et emplacement du rapport
-
-### **Résultat de validation**
-
-- Newman : **11 assertions / 11 passées**
-- Rapport HTML généré : `postman/newman-report.html`
-
-### **Fichiers ajoutés / modifiés**
-
-- `postman/auth.postman_collection.json`
-- `postman/local.postman_environment.json`
-- `postman/newman-report.html`
-- `NEWMAN_CLI.md`
-- `package.json` (script `newman:auth:report`)
+```env
+DATABASE_URL=
+JWT_SECRET=
+JWT_EXPIRES_IN=
+FRONTEND_URL=
+ACCESS_COOKIE_NAME=
+COOKIE_MAX_AGE=
+NODE_ENV=
+```

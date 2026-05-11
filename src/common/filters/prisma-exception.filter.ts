@@ -1,9 +1,14 @@
-import { ArgumentsHost, Catch, ExceptionFilter, HttpStatus } from '@nestjs/common';
+import {
+  ArgumentsHost,
+  Catch,
+  ExceptionFilter,
+  HttpStatus,
+} from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import type { Request, Response } from 'express';
 import { ApiResponse } from '../helpers/api-response';
 import { LoggerService } from '../logger/logger.service';
-import { ErrorMessages } from '../constants/error-messages';
+import { ERROR_MESSAGES } from '../constants/error-messages';
 
 interface IPrismaKnownRequestError {
   code: string;
@@ -13,9 +18,11 @@ interface IPrismaKnownRequestError {
   };
 }
 
-const PrismaKnownRequestError = (Prisma as unknown as {
-  PrismaClientKnownRequestError: new (...args: unknown[]) => Error;
-}).PrismaClientKnownRequestError;
+const PrismaKnownRequestError = (
+  Prisma as unknown as {
+    PrismaClientKnownRequestError: new (...args: unknown[]) => Error;
+  }
+).PrismaClientKnownRequestError;
 
 @Catch(PrismaKnownRequestError)
 export class PrismaExceptionFilter implements ExceptionFilter {
@@ -26,8 +33,9 @@ export class PrismaExceptionFilter implements ExceptionFilter {
     const ctx = host.switchToHttp();
     const req = ctx.getRequest<Request>();
     const res = ctx.getResponse<Response>();
-    const prismaError = exception as unknown as IPrismaKnownRequestError;
-    const detail = (prismaError.meta?.cause as string | undefined) ?? prismaError.message;
+    const prismaError = exception;
+    const detail =
+      (prismaError.meta?.cause as string | undefined) ?? prismaError.message;
     let status: HttpStatus;
     let responseMessage = `PRISMA ${prismaError.code}: ${detail}`;
 
@@ -55,7 +63,7 @@ export class PrismaExceptionFilter implements ExceptionFilter {
         break;
       default:
         status = HttpStatus.INTERNAL_SERVER_ERROR;
-        responseMessage = ErrorMessages.INTERNAL_SERVER_ERROR;
+        responseMessage = ERROR_MESSAGES.COMMON.INTERNAL_SERVER_ERROR;
     }
 
     this.logger.error(

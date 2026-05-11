@@ -5,7 +5,8 @@ import * as path from 'path';
 @Injectable()
 export class LoggerService extends ConsoleLogger implements OnModuleDestroy {
   private fileStream!: fs.WriteStream;
-  private readonly logDir = process.env.LOG_DIR ?? path.join(process.cwd(), 'logs');
+  private readonly logDir =
+    process.env.LOG_DIR ?? path.join(process.cwd(), 'logs');
   private currentFileSize = 0;
   private currentDate: string;
   // 10 MB per file before rotation
@@ -20,7 +21,8 @@ export class LoggerService extends ConsoleLogger implements OnModuleDestroy {
 
   /* CREATE LOG DIR */
   private createLogDir() {
-    if (!fs.existsSync(this.logDir)) fs.mkdirSync(this.logDir, { recursive: true });
+    if (!fs.existsSync(this.logDir))
+      fs.mkdirSync(this.logDir, { recursive: true });
   }
 
   /* GET DATE */
@@ -43,11 +45,18 @@ export class LoggerService extends ConsoleLogger implements OnModuleDestroy {
   }
 
   /* WRITE TO FILE */
-  private writeToFile(level: string, message: unknown, context?: string, trace?: string) {
+  private writeToFile(
+    level: string,
+    message: unknown,
+    context?: string,
+    trace?: string,
+  ) {
     const d = new Date();
     const ts = `${d.toLocaleDateString('fr-FR')} ${d.toLocaleTimeString('fr-FR')}`;
     const ctx = context ?? this.context ?? '';
-    const line = `[${ts}] [${level}] [${ctx}] ${message}${trace ? `\n${trace}` : ''}\n`;
+    const line = `[${ts}] [${level}] [${ctx}] ${String(message)}${
+      trace ? `\n${trace}` : ''
+    }\n`;
     const size = Buffer.byteLength(line, 'utf8');
     if (this.currentFileSize + size > this.maxFileSize) this.rotateLogs();
     this.fileStream.write(line);

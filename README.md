@@ -21,17 +21,17 @@ Les fichiers expirés sont **automatiquement supprimés** (disque + base) par un
 
 ## Stack technique
 
-| Technologie        | Version | Rôle                          |
-| ------------------ | ------- | ----------------------------- |
-| NestJS             | ^10     | Framework Node.js             |
-| TypeScript         | strict  | Typage statique               |
-| Prisma             | ^6      | ORM + migrations              |
-| PostgreSQL         | 16      | Base de données               |
-| Docker             | -       | Conteneur PostgreSQL          |
-| JWT (passport-jwt) | -       | Authentification Bearer       |
-| bcrypt             | -       | Hachage mots de passe         |
-| Multer             | -       | Upload fichiers (diskStorage) |
-| @nestjs/schedule   | -       | Nettoyage fichiers expirés    |
+| Technologie       | Version | Rôle                                     |
+| ----------------- | ------- | ---------------------------------------- |
+| NestJS            | ^10     | Framework Node.js                        |
+| TypeScript        | strict  | Typage statique                          |
+| Prisma            | ^6      | ORM + migrations                         |
+| PostgreSQL        | 16      | Base de données                          |
+| Docker            | -       | Conteneur PostgreSQL                     |
+| JWT (@nestjs/jwt) | -       | Authentification hybride cookie + Bearer |
+| bcrypt            | -       | Hachage mots de passe                    |
+| Multer            | -       | Upload fichiers (diskStorage)            |
+| @nestjs/schedule  | -       | Nettoyage fichiers expirés               |
 
 ## Architecture
 
@@ -97,6 +97,9 @@ DATABASE_URL="postgresql://datashare:datashare@localhost:5432/datashare"
 
 JWT_SECRET="change_me_in_production"
 JWT_EXPIRES_IN="7d"
+FRONTEND_URL=http://localhost:5173
+ACCESS_COOKIE_NAME=access_token
+COOKIE_MAX_AGE=604800000
 ```
 
 ## Lancement
