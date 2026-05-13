@@ -6,3 +6,6 @@ uploads/
 logs/
 test-results.json
 postman/newman-report.html
+coverage/
+coverage-integration/
+test/coverage-integration/
