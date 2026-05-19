@@ -8,5 +8,6 @@ export interface IFileResponse {
   passwordProtected: boolean;
   expiresAt: Date;
   createdAt: Date;
+  tags: { id: number; name: string }[];
 }
 
