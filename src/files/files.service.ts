@@ -52,6 +52,33 @@ export class FilesService {
   }
 
   /* UPLOAD */
+  /* RESOLVE ORIGINAL NAME HELPER */
+  private async resolveOriginalName(rawName: string, userId?: number): Promise<string> {
+    const ext = path.extname(rawName);
+    const base = path.basename(rawName, ext);
+
+    const existing = await this.prisma.file.count({
+      where: {
+        userId: userId ?? null,
+        originalName: { startsWith: base },
+      },
+    });
+
+    // no duplicate → keep as-is
+    if (existing === 0) return rawName;
+
+    // find first free index: file(1).txt, file(2).txt, …
+    for (let i = 1; i <= existing + 1; i++) {
+      const candidate = `${base}(${i})${ext}`;
+      const taken = await this.prisma.file.count({
+        where: { userId: userId ?? null, originalName: candidate },
+      });
+      if (taken === 0) return candidate;
+    }
+    // unreachable: loop always finds a slot (pigeonhole principle)
+    return rawName;
+  }
+
   async upload(file: MulterFile, dto: UploadFileDto, userId?: number): Promise<IFileResponse> {
     const { expirationDays, downloadPassword, tags } = dto;
 
@@ -67,13 +94,14 @@ export class FilesService {
       ? await bcrypt.hash(downloadPassword, 10)
       : null;
     const expiresAt = new Date(Date.now() + (expirationDays ?? 7) * 86_400_000);
+    const originalName = await this.resolveOriginalName(file.originalname, userId);
 
     const created = await this.prisma.$transaction(async (tx) => {
       const newFile = await tx.file.create({
         data: {
           userId: userId ?? null,
           filename: file.filename,
-          originalName: file.originalname,
+          originalName,
           size: file.size,
           mimeType: file.mimetype,
           shareToken,
