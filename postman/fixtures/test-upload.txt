@@ -1,0 +1,2 @@
+DataShare test file — used by Newman integration tests.
+This file is uploaded to verify the POST /files and POST /files/anonymous endpoints.
