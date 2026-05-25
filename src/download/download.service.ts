@@ -39,7 +39,7 @@ export class DownloadService {
 
   /* DOWNLOAD */
   async download(shareToken: string, dto: DownloadDto, res: Response): Promise<StreamableFile> {
-    const { password } = dto;
+    const { password } = dto ?? {};
 
     const file = await this.prisma.file.findUnique({ where: { shareToken } });
     if (!file) throw new NotFoundException(ERROR_MESSAGES.DOWNLOAD.NOT_FOUND);

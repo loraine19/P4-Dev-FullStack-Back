@@ -15,12 +15,15 @@
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "newman:auth": "npx newman run postman/auth.postman_collection.json -e postman/local.postman_environment.json --folder Auth",
     "newman:auth:report": "npx newman run postman/auth.postman_collection.json -e postman/local.postman_environment.json --reporters cli,htmlextra --reporter-htmlextra-export postman/newman-report.html",
+    "newman:api": "npx newman run postman/api.postman_collection.json -e postman/local.postman_environment.json",
+    "newman:api:report": "npx newman run postman/api.postman_collection.json -e postman/local.postman_environment.json --reporters cli,htmlextra --reporter-htmlextra-export postman/newman-report.html",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:integration": "jest --config ./test/jest-integration.json --runInBand",
-    "test:e2e": "jest --config ./test/jest-e2e.json"
+    "test:e2e": "jest --config ./test/jest-e2e.json",
+    "test:e2e:cov": "jest --config ./test/jest-e2e.json --forceExit"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",
