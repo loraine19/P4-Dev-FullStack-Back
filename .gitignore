@@ -9,3 +9,4 @@ postman/newman-report.html
 coverage/
 coverage-integration/
 test/coverage-integration/
+coverage-e2e/
