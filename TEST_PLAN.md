@@ -143,7 +143,12 @@ Monte l'app NestJS **complète** en mémoire (pas de port réseau). Envoie de vr
 
 Config : `test/jest-integration.json` — `testRegex: .integration.spec.ts$`
 
-Fichiers : `test/auth.integration.spec.ts` — 8 tests (register \+ login \+ logout)
+Fichiers :
+
+- `test/auth.integration.spec.ts` — 9 tests (register \+ login \+ logout)
+- `test/files.integration.spec.ts` — 13 tests (upload auth, upload anonyme, historique, suppression)
+- `test/download.integration.spec.ts` — 11 tests (métadonnées, téléchargement, 3 flux E2E)
+- `test/tags.integration.spec.ts` — 12 tests (CRUD tags, isolation inter-utilisateurs)
 
 ### **Plan** {#plan-1}
 
@@ -162,6 +167,63 @@ Fichiers : `test/auth.integration.spec.ts` — 8 tests (register \+ login \+ log
 | BACK | 3,1                     | with valid Token              |  ✔   | 200 \+ cookie effacé   |                   | INTE. |  ☒   |
 | BACK | 3,2                     | with invalid Token            |  ❌  |                        |                   | INTE. |  ☒   |
 
+| \=== | FILES                         | US01 · US05 · US06 · US07                 | \=== | \===                           | \===              | \===  | \=== |
+| :--- | :---------------------------- | :---------------------------------------- | :--: | :----------------------------- | :---------------- | :---- | :--: |
+| BACK | `1. POST /files`              | US01 — upload authentifié                 | \--  |                                | Jest \+ Supertest | INTE. |  ✅  |
+| BACK | 1,1                           | fichier valide + auth                     |  ✔   | 201 \+ shareToken              |                   | INTE. |  ☒   |
+| BACK | 1,2                           | sans authentification                     |  ❌  | 401                            |                   | INTE. |  ☒   |
+| BACK | 1,3                           | extension interdite                       |  ❌  | 400                            |                   | INTE. |  ☒   |
+| BACK | 1,4                           | avec mot de passe de téléchargement       |  ✔   | 201 \+ shareToken              |                   | INTE. |  ☒   |
+| BACK | `2. POST /files/anonymous`    | US07 — upload anonyme                     | \--  |                                | Jest \+ Supertest | INTE. |  ✅  |
+| BACK | 2,1                           | fichier valide sans token                 |  ✔   | 201 \+ shareToken, userId=null |                   | INTE. |  ☒   |
+| BACK | `3. GET /files`               | US05 — historique                         | \--  |                                | Jest \+ Supertest | INTE. |  ✅  |
+| BACK | 3,1                           | utilisateur connecté                      |  ✔   | 200 \+ tableau \+ props        |                   | INTE. |  ☒   |
+| BACK | 3,2                           | isolation (autre utilisateur)             |  ✔   | 200 \+ tableau vide            |                   | INTE. |  ☒   |
+| BACK | 3,3                           | sans authentification                     |  ❌  | 401                            |                   | INTE. |  ☒   |
+| BACK | `4. DELETE /files/:id`        | US06 — suppression                        | \--  |                                | Jest \+ Supertest | INTE. |  ✅  |
+| BACK | 4,1                           | autre utilisateur                         |  ❌  | 403                            |                   | INTE. |  ☒   |
+| BACK | 4,2                           | fichier inexistant                        |  ❌  | 404                            |                   | INTE. |  ☒   |
+| BACK | 4,3                           | sans authentification                     |  ❌  | 401                            |                   | INTE. |  ☒   |
+| BACK | 4,4                           | propriétaire du fichier                   |  ✔   | 204                            |                   | INTE. |  ☒   |
+| BACK | **E2E — flux upload complet** | login → upload → GET /files → DELETE      | \--  |                                | Supertest         | INTE. |  ✅  |
+| BACK | E2E,1                         | register → login → upload → list → delete |  ✔   | 201, 201, 200 listé, 204       |                   | INTE. |  ☒   |
+
+| \=== | DOWNLOAD                   | US02                                 | \=== | \===                                         | \===              | \===  | \=== |
+| :--- | :------------------------- | :----------------------------------- | :--: | :------------------------------------------- | :---------------- | :---- | :--: |
+| BACK | `1. GET /download/:token`  | US02 — métadonnées publiques         | \--  |                                              | Jest \+ Supertest | INTE. |  ✅  |
+| BACK | 1,1                        | token valide (sans mot de passe)     |  ✔   | 200 \+ { filename, requiresPassword: false } |                   | INTE. |  ☒   |
+| BACK | 1,2                        | token valide (avec mot de passe)     |  ✔   | 200 \+ { requiresPassword: true }            |                   | INTE. |  ☒   |
+| BACK | 1,3                        | token expiré                         |  ❌  | 410                                          |                   | INTE. |  ☒   |
+| BACK | 1,4                        | token inconnu                        |  ❌  | 404                                          |                   | INTE. |  ☒   |
+| BACK | `2. POST /download/:token` | US02 — téléchargement                | \--  |                                              | Jest \+ Supertest | INTE. |  ✅  |
+| BACK | 2,1                        | fichier sans mot de passe            |  ✔   | 200 stream                                   |                   | INTE. |  ☒   |
+| BACK | 2,2                        | bon mot de passe                     |  ✔   | 200 stream                                   |                   | INTE. |  ☒   |
+| BACK | 2,3                        | mauvais mot de passe                 |  ❌  | 401                                          |                   | INTE. |  ☒   |
+| BACK | 2,4                        | token expiré                         |  ❌  | 410                                          |                   | INTE. |  ☒   |
+| BACK | **E2E — flux download**    | 3 flux de bout en bout               | \--  |                                              | Supertest         | INTE. |  ✅  |
+| BACK | E2E,1                      | upload → getMeta → download libre    |  ✔   | 201, 200 requiresPassword=false, 200 stream  |                   | INTE. |  ☒   |
+| BACK | E2E,2                      | upload avec pw → download bon pw     |  ✔   | 200 stream                                   |                   | INTE. |  ☒   |
+| BACK | E2E,3                      | upload avec pw → download mauvais pw |  ❌  | 401                                          |                   | INTE. |  ☒   |
+
+| \=== | TAGS                        | US08                                       | \=== | \===                             | \===              | \===  | \=== |
+| :--- | :-------------------------- | :----------------------------------------- | :--: | :------------------------------- | :---------------- | :---- | :--: |
+| BACK | `1. GET /tags`              | US08                                       | \--  |                                  | Jest \+ Supertest | INTE. |  ✅  |
+| BACK | 1,1                         | utilisateur connecté                       |  ✔   | 200 \+ tableau                   |                   | INTE. |  ☒   |
+| BACK | 1,2                         | sans authentification                      |  ❌  | 401                              |                   | INTE. |  ☒   |
+| BACK | `2. POST /tags`             | US08                                       | \--  |                                  | Jest \+ Supertest | INTE. |  ✅  |
+| BACK | 2,1                         | nom libre                                  |  ✔   | 201                              |                   | INTE. |  ☒   |
+| BACK | 2,2                         | doublon même utilisateur                   |  ❌  | 409                              |                   | INTE. |  ☒   |
+| BACK | 2,3                         | même nom, autre utilisateur                |  ✔   | 201                              |                   | INTE. |  ☒   |
+| BACK | 2,4                         | sans authentification                      |  ❌  | 401                              |                   | INTE. |  ☒   |
+| BACK | `3. DELETE /tags/:id`       | US08                                       | \--  |                                  | Jest \+ Supertest | INTE. |  ✅  |
+| BACK | 3,1                         | autre utilisateur                          |  ❌  | 403                              |                   | INTE. |  ☒   |
+| BACK | 3,2                         | tag inexistant                             |  ❌  | 404                              |                   | INTE. |  ☒   |
+| BACK | 3,3                         | sans authentification                      |  ❌  | 401                              |                   | INTE. |  ☒   |
+| BACK | 3,4                         | propriétaire du tag                        |  ✔   | 204                              |                   | INTE. |  ☒   |
+| BACK | **E2E — isolation données** | 2 flux inter-utilisateurs                  | \--  |                                  | Supertest         | INTE. |  ✅  |
+| BACK | E2E,1                       | flux CRUD complet (create → list → delete) |  ✔   | 201, 200 tag listé, 204          |                   | INTE. |  ☒   |
+| BACK | E2E,2                       | isolation userA / userB                    |  ✔   | userA ne voit pas les tags userB |                   | INTE. |  ☒   |
+
 ---
 
 ## **3\. Coverage** {#3.-coverage}
@@ -172,8 +234,20 @@ Fichiers : `test/auth.integration.spec.ts` — 8 tests (register \+ login \+ log
 
 Génère : Rapport HTML navigable : `coverage/lcov-report/index.html`
 
+Scope : modules `auth` uniquement (12 tests). Le taux global est faible car il inclut tous les fichiers source — les modules files, download, tags sont couverts par les tests d'intégration.
+
 2. ### **Integration** {#integration}
 
 ##### `npm run test:integration`
 
 Génère : Rapport HTML navigable : `coverage-integration/lcov-report/index.html`
+
+**Résultats — 45/45 tests — branche `feat/api`**
+
+| Module     | Statements | Branches  | Functions  | Lines     |
+| :--------- | :--------- | :-------- | :--------- | :-------- |
+| **Global** | **88.04%** | **68.3%** | **90.54%** | **87.5%** |
+| auth       | 100%       | 79.62%    | 100%       | 100%      |
+| files      | 91%        | 74.19%    | 86.66%     | 91.3%     |
+| download   | 95.91%     | 78.94%    | 100%       | 100%      |
+| tags       | 100%       | 79.41%    | 100%       | 100%      |
