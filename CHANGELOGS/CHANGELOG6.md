@@ -9,13 +9,13 @@
 
 ## **Ce qui est en place**
 
-| Thème                     | Ce qui est opérationnel                                                                           |
-| :------------------------ | :------------------------------------------------------------------------------------------------ |
-| **Tests parcours API**    | 12/12 — parcours utilisateur complet (register → login → upload → download → tags → logout → 401) |
-| **Coverage Istanbul parcours API** | 82.29% statements, 86.48% functions, 84.04% lines                                          |
-| **MAINTENANCE.md**        | Procédures npm audit, inventaire dépendances, fréquences de mise à jour                           |
-| **TESTING.md**            | Mis à jour — section parcours API + critères d'acceptation complets (unit + integration + parcours API) |
-| **Fix download 500**      | `dto ?? {}` — POST sans body ne plante plus en production                                         |
+| Thème                              | Ce qui est opérationnel                                                                                 |
+| :--------------------------------- | :------------------------------------------------------------------------------------------------------ |
+| **Tests parcours API**             | 12/12 — parcours utilisateur complet (register → login → upload → download → tags → logout → 401)       |
+| **Coverage Istanbul parcours API** | 82.29% statements, 86.48% functions, 84.04% lines                                                       |
+| **MAINTENANCE.md**                 | Procédures npm audit, inventaire dépendances, fréquences de mise à jour                                 |
+| **TESTING.md**                     | Mis à jour — section parcours API + critères d'acceptation complets (unit + integration + parcours API) |
+| **Fix download 500**               | `dto ?? {}` — POST sans body ne plante plus en production                                               |
 
 > `PERF.md` reporté à un commit dédié — section Lighthouse front à mesurer avant livraison.
 
@@ -59,15 +59,32 @@ Quand `POST /download/:token` reçoit un body vide sans `Content-Type: applicati
 
 ---
 
+## **Correctifs architecturaux (post-tests)**
+
+Bugs détectés lors des tests manuels, corrigés dans le même sprint.
+
+| Fichier                                         | Fix                                                                              |
+| :---------------------------------------------- | :------------------------------------------------------------------------------- |
+| `src/files/files.controller.ts`                 | `fileFilter` dans `multerOptions` — validation extension **avant** écriture disque |
+| `src/files/files.service.ts`                    | Suppression du check extension redondant (déplacé dans `fileFilter`)             |
+| `src/common/filters/multer-exception.filter.ts` | **Nouveau** — `@Catch(MulterError)` → 400 au lieu de 500                         |
+| `src/common/constants/error-messages.ts`        | Ajout `FILE_TOO_LARGE`                                                           |
+| `src/download/download.controller.ts`           | Suppression `@Res` / `res: Response` — plus de couplage HTTP dans le service     |
+| `src/download/download.service.ts`              | `StreamableFile({ type, disposition })` remplace `res.set()`                     |
+| `src/main.ts`                                   | CORS `exposedHeaders: ['Content-Disposition']` — fix filename `'fichier'` front  |
+| `docker-compose.yml`                            | TODO volume `uploads/` si NestJS dockerisé                                       |
+
+---
+
 ## **Résultats des suites de tests (état final)**
 
-| Suite       | Fichier                      | Résultat |
-| :---------- | :--------------------------- | :------- |
-| Unitaire    | `src/**/*.spec.ts`           | ✅ 12/12 |
-| Intégration | `test/*.integration.spec.ts` | ✅ 45/45 |
+| Suite        | Fichier                      | Résultat |
+| :----------- | :--------------------------- | :------- |
+| Unitaire     | `src/**/*.spec.ts`           | ✅ 12/12 |
+| Intégration  | `test/*.integration.spec.ts` | ✅ 45/45 |
 | Parcours API | `test/app.e2e-spec.ts`       | ✅ 12/12 |
 
-| Rapport        | Statements | Branches | Functions | Lines  |
-| :------------- | :--------- | :------- | :-------- | :----- |
-| Intégration    | 88.04%     | 68.3%    | 90.54%    | 87.5%  |
+| Rapport                 | Statements | Branches | Functions | Lines  |
+| :---------------------- | :--------- | :------- | :-------- | :----- |
+| Intégration             | 88.04%     | 68.3%    | 90.54%    | 87.5%  |
 | Parcours API (Istanbul) | 82.29%     | 61.18%   | 86.48%    | 84.04% |

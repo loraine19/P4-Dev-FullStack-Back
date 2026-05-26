@@ -9,8 +9,8 @@
 
 ## **Ce qui est en place**
 
-| Spec         | Fichier                             | Tests                                                                                                                                                                      |
-| :----------- | :---------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Spec         | Fichier                             | Tests                                                                                                                                                                       |
+| :----------- | :---------------------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Files**    | `test/files.integration.spec.ts`    | POST /files (auth, 401, ext interdite, avec password), POST /files/anonymous, GET /files (200+props, isolation, 401), DELETE /files/:id (403, 404, 401, 204) + flux complet |
 | **Download** | `test/download.integration.spec.ts` | GET /download/:token (libre, protégé, expiré, inconnu), POST /download/:token (sans pw, bon pw, mauvais pw, expiré) + 3 flux                                                |
 | **Tags**     | `test/tags.integration.spec.ts`     | GET /tags (200, 401), POST /tags (201, 409 doublon, 201 autre user, 401), DELETE /tags/:id (403, 404, 401, 204) + 2 flux isolation                                          |
@@ -52,14 +52,14 @@
 
 ## **Fichiers modifiés / créés**
 
-| Fichier                                           | Action                                                                     |
-| :------------------------------------------------ | :------------------------------------------------------------------------- |
-| `src/files/interfaces/file-response.interface.ts` | Modifié — ajout champ `tags: { id: number; name: string }[]`               |
-| `src/files/files.service.ts`                      | Modifié — `toFileResponse()` mappe les tags, `findAll()` inclut `fileTags` |
+| Fichier                                           | Action                                                                       |
+| :------------------------------------------------ | :--------------------------------------------------------------------------- |
+| `src/files/interfaces/file-response.interface.ts` | Modifié — ajout champ `tags: { id: number; name: string }[]`                 |
+| `src/files/files.service.ts`                      | Modifié — `toFileResponse()` mappe les tags, `findAll()` inclut `fileTags`   |
 | `src/files/dto/upload-file.dto.ts`                | Modifié — ajout `@Transform` pour parser les champs multipart (string → int) |
-| `test/files.integration.spec.ts`                  | Créé — 13 cas de test + flux complet                                       |
-| `test/download.integration.spec.ts`               | Créé — 11 cas de test + 3 flux                                             |
-| `test/tags.integration.spec.ts`                   | Créé — 12 cas de test + 2 flux isolation                                   |
+| `test/files.integration.spec.ts`                  | Créé — 13 cas de test + flux complet                                         |
+| `test/download.integration.spec.ts`               | Créé — 11 cas de test + 3 flux                                               |
+| `test/tags.integration.spec.ts`                   | Créé — 12 cas de test + 2 flux isolation                                     |
 
 ---
 
@@ -74,19 +74,19 @@ npm run test:integration  # 45/45 — 4 suites — DB Docker PostgreSQL
 
 ### Rapport d'intégration
 
-| Suite                            | Tests | Statut |
-| :------------------------------- | :---- | :----- |
-| `auth.integration.spec.ts`       | 9/9   | ✅      |
-| `files.integration.spec.ts`      | 13/13 | ✅      |
-| `download.integration.spec.ts`   | 11/11 | ✅      |
-| `tags.integration.spec.ts`       | 12/12 | ✅      |
-| **Total**                        | **45/45** | **✅** |
+| Suite                          | Tests     | Statut |
+| :----------------------------- | :-------- | :----- |
+| `auth.integration.spec.ts`     | 9/9       | ✅     |
+| `files.integration.spec.ts`    | 13/13     | ✅     |
+| `download.integration.spec.ts` | 11/11     | ✅     |
+| `tags.integration.spec.ts`     | 12/12     | ✅     |
+| **Total**                      | **45/45** | **✅** |
 
 ### Coverage globale (intégration)
 
-| Métrique  | Global | auth | files | download | tags |
-| :-------- | :----- | :--- | :---- | :------- | :--- |
-| Statements | 88.04% | 100% | 91%   | 95.91%   | 100% |
-| Branches  | 68.3%  | 79.62% | 74.19% | 78.94% | 79.41% |
-| Functions | 90.54% | 100% | 86.66% | 100%    | 100% |
-| Lines     | 87.5%  | 100% | 91.3% | 100%     | 100% |
+| Métrique   | Global | auth   | files  | download | tags   |
+| :--------- | :----- | :----- | :----- | :------- | :----- |
+| Statements | 88.04% | 100%   | 91%    | 95.91%   | 100%   |
+| Branches   | 68.3%  | 79.62% | 74.19% | 78.94%   | 79.41% |
+| Functions  | 90.54% | 100%   | 86.66% | 100%     | 100%   |
+| Lines      | 87.5%  | 100%   | 91.3%  | 100%     | 100%   |

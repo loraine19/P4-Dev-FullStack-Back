@@ -8,11 +8,11 @@
 
 Trois niveaux de tests complémentaires couvrent la totalité de la logique métier :
 
-| Niveau          | Outil            | Scope                                          | Isolation                                      |
-| :-------------- | :--------------- | :--------------------------------------------- | :--------------------------------------------- |
-| **Unitaire**    | Jest             | Guard JWT + AuthService                        | Mocks totaux — aucune BDD, aucun HTTP          |
-| **Intégration**    | Jest + Supertest | Tous les modules (auth, files, download, tags) | Stack NestJS complète + PostgreSQL Docker réel |
-| **Parcours API**   | Jest + Supertest | Parcours utilisateur complet (12 étapes)       | Stack NestJS complète + PostgreSQL Docker réel |
+| Niveau           | Outil            | Scope                                          | Isolation                                      |
+| :--------------- | :--------------- | :--------------------------------------------- | :--------------------------------------------- |
+| **Unitaire**     | Jest             | Guard JWT + AuthService                        | Mocks totaux — aucune BDD, aucun HTTP          |
+| **Intégration**  | Jest + Supertest | Tous les modules (auth, files, download, tags) | Stack NestJS complète + PostgreSQL Docker réel |
+| **Parcours API** | Jest + Supertest | Parcours utilisateur complet (12 étapes)       | Stack NestJS complète + PostgreSQL Docker réel |
 
 ---
 
@@ -154,18 +154,18 @@ Rapport HTML : `coverage/lcov-report/index.html`
 
 ## **7. Critères d'acceptation**
 
-| Critère                           | Seuil              | Résultat         |
-| :-------------------------------- | :----------------- | :--------------- |
-| Tests unitaires                   | 100% pass          | ✅ 12/12         |
-| Tests d'intégration               | 100% pass          | ✅ 45/45         |
-| Tests parcours API                | 100% pass          | ✅ 12/12         |
-| Tests E2E Cypress (OC obligatoire)| 100% pass          | ⏳ EN ATTENTE    |
-| Coverage statements (intégration) | ≥ 70%              | ✅ 88.04%        |
-| Coverage lines (intégration)      | ≥ 70%              | ✅ 87.5%         |
-| Coverage functions (intégration)  | ≥ 70%              | ✅ 90.54%        |
-| Coverage statements (parcours API)| ≥ 70%              | ✅ 82.29%        |
-| Coverage lines (parcours API)     | ≥ 70%              | ✅ 84.04%        |
-| 0 erreur TypeScript               | `npx tsc --noEmit` | ✅ 0 erreur      |
+| Critère                            | Seuil              | Résultat      |
+| :--------------------------------- | :----------------- | :------------ |
+| Tests unitaires                    | 100% pass          | ✅ 12/12      |
+| Tests d'intégration                | 100% pass          | ✅ 45/45      |
+| Tests parcours API                 | 100% pass          | ✅ 12/12      |
+| Tests E2E Cypress (OC obligatoire) | 100% pass          | ⏳ EN ATTENTE |
+| Coverage statements (intégration)  | ≥ 70%              | ✅ 88.04%     |
+| Coverage lines (intégration)       | ≥ 70%              | ✅ 87.5%      |
+| Coverage functions (intégration)   | ≥ 70%              | ✅ 90.54%     |
+| Coverage statements (parcours API) | ≥ 70%              | ✅ 82.29%     |
+| Coverage lines (parcours API)      | ≥ 70%              | ✅ 84.04%     |
+| 0 erreur TypeScript                | `npx tsc --noEmit` | ✅ 0 erreur   |
 
 ---
 
