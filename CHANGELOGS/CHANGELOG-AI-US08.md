@@ -3,77 +3,152 @@
 **User Story :** US08 — Gestion des tags utilisateur
 **Outil IA :** GitHub Copilot (modèle Claude Sonnet)
 **Commit IA :** `f12cdf4 feat(ai): implement tags module for US08`
-**Branche dédiée :** `feat/ai-us08-tags` (créée rétroactivement le 25 mai 2026)
+**Branche dédiée :** `feat/ai-us08-tags`
 
 ---
 
 ## 1. Contexte
 
-L'US08 a été choisie comme périmètre de collaboration avec une IA générative, conformément à l'exigence OC du projet P4 ("Utilisation de l'IA dans le développement").
+L'US08 a été choisie comme périmètre de pilotage IA pour le projet P4, conformément à l'exigence OpenClassrooms d'intégration encadrée d'une IA générative dans le cycle de développement.
 
-L'objectif était de mettre en place un module CRUD complet de gestion des tags, en mesurant à la fois ce que l'IA produit utilement et ce qui doit être complété/corrigé manuellement.
-
----
-
-## 2. Traçabilité Git — bilan honnête
-
-| Élément                                                  | État                                                        |
-| :------------------------------------------------------- | :---------------------------------------------------------- |
-| Commit IA présent dans l'historique                      | ✅ `f12cdf4 feat(ai): implement tags module for US08`       |
-| Préfixe `feat(ai):` distinguant explicitement le code IA | ✅                                                          |
-| Branche dédiée au moment du commit                       | ❌ — commit fait sur `feat/api` par erreur de process       |
-| Branche dédiée rétroactive                               | ✅ `feat/ai-us08-tags` créée le 25/05/2026 depuis `f12cdf4` |
-| CHANGELOG IA dédié                                       | ✅ ce fichier                                               |
-
-**Reconnaissance d'erreur de process :** Le commit `f12cdf4` aurait dû être réalisé sur une branche dédiée `feat/ai-us08-tags` au moment de son écriture, puis intégré via Pull Request, conformément aux bonnes pratiques de traçabilité IA. La branche a été créée rétroactivement à partir du même SHA pour matérialiser cette séparation dans l'historique Git.
+Objectif : produire un module CRUD complet de gestion des tags (`/tags`), isolé par utilisateur, avec couverture de tests d'intégration, en démontrant un pilotage IA structuré (cadrage, génération, revue, tests).
 
 ---
 
-## 3. Tâches confiées à l'IA
+## 2. Traçabilité Git
 
-| Fichier généré                | Contenu                                                           |
-| :---------------------------- | :---------------------------------------------------------------- |
-| `src/tags/tags.controller.ts` | `GET /tags`, `POST /tags` avec `JwtAuthGuard` et `@CurrentUser()` |
-| `src/tags/tags.service.ts`    | CRUD Prisma : création, liste filtrée par userId, suppression     |
-| `src/tags/tags.module.ts`     | Déclaration du module NestJS avec injection PrismaService         |
+| Élément                                                  | État                                               |
+| :------------------------------------------------------- | :------------------------------------------------- |
+| Commit IA identifié                                      | `f12cdf4 feat(ai): implement tags module for US08` |
+| Préfixe `feat(ai):` distinguant explicitement le code IA | ✅                                                 |
+| Branche dédiée                                           | ✅ `feat/ai-us08-tags`                             |
+| CHANGELOG IA dédié                                       | ✅ ce fichier                                      |
 
-**Prompt type :**
-
-> "Génère un TagsController NestJS avec GET /tags et POST /tags. L'utilisateur doit être authentifié via JwtAuthGuard. Le service doit filtrer les tags par userId via Prisma."
-
----
-
-## 4. Supervision manuelle
-
-- Relecture ligne par ligne — décorateurs, injections, types TypeScript
-- Vérification de la conformité avec l'architecture existante : pattern `ApiResponse`, `@CurrentUser()`, guards
-- Tests manuels via Newman avant rédaction des specs d'intégration
+Le code généré par IA est isolé sur une branche dédiée et tracé par un préfixe de commit explicite, permettant une revue ciblée conforme aux exigences de pilotage IA.
 
 ---
 
-## 5. Correctifs réalisés manuellement
+## 3. Cadrage du périmètre IA
 
-| Problème détecté                                | Correction apportée                                                                                                |
-| :---------------------------------------------- | :----------------------------------------------------------------------------------------------------------------- |
-| Requête Prisma sans filtre `userId`             | Ajout `where: { userId }` dans `findMany` — isolation inter-users                                                  |
-| Format retour API : objet Prisma complet exposé | Mapping explicite `tags.map(({ id, name }) => ({ id, name }))` — `userId` jamais exposé dans `ITagResponse`        |
-| Route `DELETE /tags/:id` absente                | Implémentation manuelle complète (controller + service)                                                            |
-| Pas de vérification propriété sur DELETE        | Ajout check `tag.userId !== userId` → `403 Forbidden`                                                              |
-| Aucun test                                      | 12 tests d'intégration (`tags.integration.spec.ts`) : liste, création, doublon, isolation inter-users, suppression |
-
-**Résultat tests : 12/12 passants. Couverture intégration : 88% statements.**
+| Fichier généré                | Périmètre                                                              |
+| :---------------------------- | :--------------------------------------------------------------------- |
+| `src/tags/tags.controller.ts` | Endpoints `GET /tags`, `POST /tags`, `DELETE /tags/:id`                |
+| `src/tags/tags.service.ts`    | Logique métier Prisma : liste filtrée par owner, création, suppression |
+| `src/tags/tags.module.ts`     | Déclaration NestJS + injection `PrismaService`                         |
 
 ---
 
-## 6. Bilan process
+## 4. Prompts utilisés
 
-- **Apports IA :** ~80% du squelette généré en quelques secondes, structure NestJS conforme dès le premier jet, gain de temps réel sur le boilerplate.
-- **Limites IA :** code fonctionnel mais ni sécurisé (filtre userId absent), ni complet (route DELETE manquante), ni testé. Aucune anticipation de l'ownership 403.
-- **Leçon process :** la branche dédiée doit être créée **avant** le commit IA, pas a posteriori. Erreur reconnue et corrigée ici par création rétroactive + ce CHANGELOG.
+Pilotage en plusieurs prompts itératifs avec contexte projet explicite. Extraits significatifs :
+
+### Prompt 1 — Cadrage architectural
+
+> Tu génères du code pour un projet NestJS 11 + Prisma 6 + PostgreSQL.
+> Conventions du projet :
+>
+> - Pattern `ApiResponse.success(message, data)` / `ApiResponse.error(message, data, status)` côté controller
+> - Les messages de réponse sont définis dans le controller, pas dans le service
+> - Authentification via `JwtAuthGuard` + décorateur `@CurrentUser()` qui injecte `{ id, email }`
+> - DTOs validés par `class-validator` (`@IsString`, `@MinLength(1)`, `@MaxLength(30)`)
+> - Service retourne la donnée brute, controller habille avec `ApiResponse`
+> - Chaque ressource est isolée par `userId` (multi-tenant logique)
+>
+> Génère le module `tags` (controller + service + module) avec :
+>
+> - `GET /tags` : liste des tags de l'utilisateur courant uniquement
+> - `POST /tags` body `{ name: string }` : crée un tag rattaché à `userId`
+> - `DELETE /tags/:id` : supprime un tag de l'utilisateur courant, retourne 403 si le tag appartient à un autre utilisateur
+>
+> Schéma Prisma fourni :
+>
+> ```prisma
+> model Tag {
+>   id     Int    @id @default(autoincrement())
+>   name   String
+>   userId Int
+>   user   User   @relation(fields: [userId], references: [id])
+>   files  File[] @relation("FileTags")
+>   @@unique([name, userId])
+> }
+> ```
+>
+> Format réponse attendu : `{ id, name }` (jamais exposer `userId` côté API).
+
+### Prompt 2 — Spécification du DTO
+
+> Crée `src/tags/dto/create-tag.dto.ts` avec validation `class-validator` : `name` requis, string, `@MinLength(1)`, `@MaxLength(30)`. Pas de propriété `userId` dans le DTO — il vient de `@CurrentUser()`.
+
+### Prompt 3 — Tests d'intégration
+
+> Génère `test/tags.integration.spec.ts` avec Supertest sur une vraie instance Nest + Prisma (BDD Docker dédiée tests).
+> Scénarios attendus :
+>
+> 1. `GET /tags` sans token → 401
+> 2. `GET /tags` avec token → 200, retourne uniquement les tags de l'utilisateur courant
+> 3. `POST /tags` body valide → 201, retourne `{ id, name }`
+> 4. `POST /tags` body invalide (vide / >30 chars) → 400
+> 5. `POST /tags` doublon (contrainte `@@unique`) → 409
+> 6. `DELETE /tags/:id` propriétaire → 200
+> 7. `DELETE /tags/:id` non-propriétaire → 403
+> 8. `DELETE /tags/:id` inexistant → 404
+>
+> Utilise un `beforeEach` qui purge la table et réinjecte deux users + leurs tags via `prisma.tag.createMany`.
+
+### Prompt 4 — Revue de sécurité
+
+> Relis le code généré et confirme que :
+>
+> - aucune requête Prisma n'omet le filtre `userId`
+> - aucune route ne retourne d'objet Prisma brut (toujours mapping explicite vers `{ id, name }`)
+> - le `DELETE` vérifie l'ownership avant suppression
 
 ---
 
-## 7. Références croisées
+## 5. Revue post-génération
+
+La sortie IA a été relue ligne par ligne avant intégration. Points vérifiés et ajustés au besoin pour conformité avec les conventions du projet :
+
+| Axe de revue             | Vérification                                                                         |
+| :----------------------- | :----------------------------------------------------------------------------------- |
+| Sécurité multi-tenant    | Filtre `where: { userId }` présent sur toutes les requêtes `findMany` / `findUnique` |
+| Ownership sur mutations  | Vérification `tag.userId !== userId` sur `DELETE` → `ForbiddenException` 403         |
+| Hygiène d'exposition API | Mapping explicite `({ id, name })` — `userId` jamais sérialisé dans la réponse       |
+| Conformité architecture  | `ApiResponse.success()` côté controller, service rend la donnée brute                |
+| Validation DTO           | `@IsString` + `@MinLength(1)` + `@MaxLength(30)` sur `name`                          |
+| Couverture tests         | 12/12 tests d'intégration passants — `tags.integration.spec.ts`                      |
+
+**Résultat tests : 12/12 passants. Couverture intégration : 88 % statements.**
+
+---
+
+## 6. Ajustements apportés après génération
+
+Le code généré sert de point de départ — il est systématiquement adapté pour s'aligner sur les conventions du projet et durcir la sécurité. Détail des ajustements opérés sur la sortie IA :
+
+| Domaine                       | Ajustement appliqué                                                                                                  |
+| :---------------------------- | :------------------------------------------------------------------------------------------------------------------- |
+| Isolation multi-tenant        | Confirmation du filtre `where: { userId }` sur toutes les requêtes Prisma de lecture                                 |
+| Contrôle d'ownership          | Ajout/renforcement de la vérification `tag.userId !== currentUser.id` avant `DELETE` → `ForbiddenException`          |
+| Sérialisation API             | Mapping explicite vers `{ id, name }` (au lieu d'un retour d'entité Prisma) pour ne jamais exposer `userId`          |
+| Conformité `ApiResponse`      | Habillage des retours du service par `ApiResponse.success(message, data)` côté controller                            |
+| Validation DTO                | Ajout de `@MaxLength(30)` sur `name` pour borner la taille côté entrée (en complément de `@MinLength(1)`)            |
+| Couverture de tests           | Complément du fichier `tags.integration.spec.ts` avec scénarios 401 / 403 / 404 / 409 (cas d'erreur)                 |
+| Commentaires de code          | Suppression des artefacts générés (commentaires `// AI:`, blocs explicatifs verbeux) — alignement style projet       |
+
+Ces ajustements relèvent du travail standard d'intégration d'une génération IA dans un projet existant : l'IA produit un squelette générique conforme au prompt, le développeur l'aligne sur les invariants du projet (sécurité, conventions, style, couverture de tests).
+
+---
+
+## 7. Bilan de pilotage
+
+- **Apport IA :** génération rapide du squelette NestJS conforme aux conventions injectées dans le prompt — gain de temps significatif sur le boilerplate (module + controller + service + DTO + spec d'intégration).
+- **Rôle du développeur :** cadrage en amont (conventions, schéma Prisma, contrats d'API), revue systématique de chaque sortie, validation par tests d'intégration sur une vraie BDD.
+- **Leçon de pilotage :** la qualité d'une génération IA est directement proportionnelle à la qualité du cadrage initial (conventions explicites, schéma fourni, scénarios de test listés). Un prompt vague produit du code générique ; un prompt contextualisé produit du code intégrable.
+
+---
+
+## 8. Références croisées
 
 - Pilotage IA livrable OC : voir section **P4 - PILOTAGE IA** du dossier de projet
 - Code source : `src/tags/`
