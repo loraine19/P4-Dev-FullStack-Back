@@ -11,8 +11,8 @@ Trois niveaux de tests complémentaires couvrent la totalité de la logique mét
 | Niveau          | Outil            | Scope                                          | Isolation                                      |
 | :-------------- | :--------------- | :--------------------------------------------- | :--------------------------------------------- |
 | **Unitaire**    | Jest             | Guard JWT + AuthService                        | Mocks totaux — aucune BDD, aucun HTTP          |
-| **Intégration** | Jest + Supertest | Tous les modules (auth, files, download, tags) | Stack NestJS complète + PostgreSQL Docker réel |
-| **E2E**         | Jest + Supertest | Parcours utilisateur complet (12 étapes)       | Stack NestJS complète + PostgreSQL Docker réel |
+| **Intégration**    | Jest + Supertest | Tous les modules (auth, files, download, tags) | Stack NestJS complète + PostgreSQL Docker réel |
+| **Parcours API**   | Jest + Supertest | Parcours utilisateur complet (12 étapes)       | Stack NestJS complète + PostgreSQL Docker réel |
 
 ---
 
@@ -64,11 +64,13 @@ npm run test:integration     # lancer les 4 suites → coverage-integration/lcov
 
 ---
 
-## **4. Tests end-to-end (E2E)**
+## **4. Tests parcours API (Jest + Supertest)**
 
 ### Logique
 
-Exécute un parcours utilisateur complet en séquence sur l'application NestJS réelle + PostgreSQL Docker — de l'inscription jusqu'à la révocation d'accès. Utilise l'authentification par cookie (`isMobile: false` → httpOnly `access_token`). Chaque étape construit sur les données créées par la précédente (upload → token → download → tag → suppression). La couverture Istanbul est collectée sur l'ensemble du code source `src/`.
+Exécute un parcours utilisateur complet en séquence sur l'API NestJS réelle + PostgreSQL Docker — de l'inscription jusqu'à la révocation d'accès. Les requêtes HTTP sont émises par Supertest (côté back uniquement, pas de navigateur). Chaque étape construit sur les données créées par la précédente (upload → token → download → tag → suppression). La couverture Istanbul est collectée sur l'ensemble du code source `src/`.
+
+> ⚠️ **Ce niveau ne remplace pas Cypress.** Ces tests valident les routes HTTP du back-end en séquence. Les tests E2E navigateur (front → back → BDD) sont gérés par Cypress — voir section 5.
 
 ### Commandes
 
@@ -97,9 +99,30 @@ npm run test:e2e:cov        # lancer le parcours + rapport de couverture → cov
 
 ---
 
-## **5. Rapport de couverture**
+## **5. Tests E2E navigateur — Cypress (EN ATTENTE)**
 
-### E2E (Istanbul — parcours complet)
+### Statut : ⏳ non implémenté
+
+Cypress est l'outil imposé par OC pour les tests end-to-end full-stack (navigateur → front React → API NestJS → PostgreSQL). Ces tests vérifient les parcours utilisateur complets depuis l'interface graphique.
+
+**Raison de l'absence** : non implémenté dans le périmètre du sprint. Les parcours fonctionnels sont validés par les tests parcours API (section 4) et par les tests manuels en local.
+
+**Parcours prévus (non écrits) :**
+
+| Parcours Cypress prévu              | Priorité |
+| :---------------------------------- | :------- |
+| Register → Login → MySpace          | Haute    |
+| Upload fichier → lien de partage    | Haute    |
+| Download via lien public            | Haute    |
+| Upload avec mot de passe → Download | Moyenne  |
+| Suppression de fichier              | Moyenne  |
+| Gestion des tags (CRUD)             | Basse    |
+
+---
+
+## **6. Rapport de couverture**
+
+### Parcours API (Istanbul — parcours complet)
 
 | Module     | Statements | Branches   | Functions  | Lines      |
 | :--------- | :--------- | :--------- | :--------- | :--------- |
@@ -129,22 +152,23 @@ Rapport HTML : `coverage/lcov-report/index.html`
 
 ---
 
-## **6. Critères d'acceptation**
+## **7. Critères d'acceptation**
 
-| Critère                           | Seuil              | Résultat    |
-| :-------------------------------- | :----------------- | :---------- |
-| Tests unitaires                   | 100% pass          | ✅ 12/12    |
-| Tests d'intégration               | 100% pass          | ✅ 45/45    |
-| Tests E2E                         | 100% pass          | ✅ 12/12    |
-| Coverage statements (intégration) | ≥ 70%              | ✅ 88.04%   |
-| Coverage lines (intégration)      | ≥ 70%              | ✅ 87.5%    |
-| Coverage functions (intégration)  | ≥ 70%              | ✅ 90.54%   |
-| Coverage statements (e2e)         | ≥ 70%              | ✅ 82.29%   |
-| Coverage lines (e2e)              | ≥ 70%              | ✅ 84.04%   |
-| 0 erreur TypeScript               | `npx tsc --noEmit` | ✅ 0 erreur |
+| Critère                           | Seuil              | Résultat         |
+| :-------------------------------- | :----------------- | :--------------- |
+| Tests unitaires                   | 100% pass          | ✅ 12/12         |
+| Tests d'intégration               | 100% pass          | ✅ 45/45         |
+| Tests parcours API                | 100% pass          | ✅ 12/12         |
+| Tests E2E Cypress (OC obligatoire)| 100% pass          | ⏳ EN ATTENTE    |
+| Coverage statements (intégration) | ≥ 70%              | ✅ 88.04%        |
+| Coverage lines (intégration)      | ≥ 70%              | ✅ 87.5%         |
+| Coverage functions (intégration)  | ≥ 70%              | ✅ 90.54%        |
+| Coverage statements (parcours API)| ≥ 70%              | ✅ 82.29%        |
+| Coverage lines (parcours API)     | ≥ 70%              | ✅ 84.04%        |
+| 0 erreur TypeScript               | `npx tsc --noEmit` | ✅ 0 erreur      |
 
 ---
 
-## **7. Détail des cas de test**
+## **8. Détail des cas de test**
 
 Voir [TEST_PLAN.md](./TEST_PLAN.md) pour le détail complet de chaque cas de test par module (US, endpoint, attendu, statut).

@@ -126,15 +126,15 @@ La sortie IA a été relue ligne par ligne avant intégration. Points vérifiés
 
 Le code généré sert de point de départ — il est systématiquement adapté pour s'aligner sur les conventions du projet et durcir la sécurité. Détail des ajustements opérés sur la sortie IA :
 
-| Domaine                       | Ajustement appliqué                                                                                                  |
-| :---------------------------- | :------------------------------------------------------------------------------------------------------------------- |
-| Isolation multi-tenant        | Confirmation du filtre `where: { userId }` sur toutes les requêtes Prisma de lecture                                 |
-| Contrôle d'ownership          | Ajout/renforcement de la vérification `tag.userId !== currentUser.id` avant `DELETE` → `ForbiddenException`          |
-| Sérialisation API             | Mapping explicite vers `{ id, name }` (au lieu d'un retour d'entité Prisma) pour ne jamais exposer `userId`          |
-| Conformité `ApiResponse`      | Habillage des retours du service par `ApiResponse.success(message, data)` côté controller                            |
-| Validation DTO                | Ajout de `@MaxLength(30)` sur `name` pour borner la taille côté entrée (en complément de `@MinLength(1)`)            |
-| Couverture de tests           | Complément du fichier `tags.integration.spec.ts` avec scénarios 401 / 403 / 404 / 409 (cas d'erreur)                 |
-| Commentaires de code          | Suppression des artefacts générés (commentaires `// AI:`, blocs explicatifs verbeux) — alignement style projet       |
+| Domaine                  | Ajustement appliqué                                                                                            |
+| :----------------------- | :------------------------------------------------------------------------------------------------------------- |
+| Isolation multi-tenant   | Confirmation du filtre `where: { userId }` sur toutes les requêtes Prisma de lecture                           |
+| Contrôle d'ownership     | Ajout/renforcement de la vérification `tag.userId !== currentUser.id` avant `DELETE` → `ForbiddenException`    |
+| Sérialisation API        | Mapping explicite vers `{ id, name }` (au lieu d'un retour d'entité Prisma) pour ne jamais exposer `userId`    |
+| Conformité `ApiResponse` | Habillage des retours du service par `ApiResponse.success(message, data)` côté controller                      |
+| Validation DTO           | Ajout de `@MaxLength(30)` sur `name` pour borner la taille côté entrée (en complément de `@MinLength(1)`)      |
+| Couverture de tests      | Complément du fichier `tags.integration.spec.ts` avec scénarios 401 / 403 / 404 / 409 (cas d'erreur)           |
+| Commentaires de code     | Suppression des artefacts générés (commentaires `// AI:`, blocs explicatifs verbeux) — alignement style projet |
 
 Ces ajustements relèvent du travail standard d'intégration d'une génération IA dans un projet existant : l'IA produit un squelette générique conforme au prompt, le développeur l'aligne sur les invariants du projet (sécurité, conventions, style, couverture de tests).
 

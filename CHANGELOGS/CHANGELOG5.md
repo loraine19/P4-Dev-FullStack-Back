@@ -11,9 +11,9 @@
 
 | Spec         | Fichier                             | Tests                                                                                                                                                                      |
 | :----------- | :---------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Files**    | `test/files.integration.spec.ts`    | POST /files (auth, 401, ext interdite, avec password), POST /files/anonymous, GET /files (200+props, isolation, 401), DELETE /files/:id (403, 404, 401, 204) + E2E complet |
-| **Download** | `test/download.integration.spec.ts` | GET /download/:token (libre, protégé, expiré, inconnu), POST /download/:token (sans pw, bon pw, mauvais pw, expiré) + 3 E2E flux                                           |
-| **Tags**     | `test/tags.integration.spec.ts`     | GET /tags (200, 401), POST /tags (201, 409 doublon, 201 autre user, 401), DELETE /tags/:id (403, 404, 401, 204) + 2 E2E flux isolation                                     |
+| **Files**    | `test/files.integration.spec.ts`    | POST /files (auth, 401, ext interdite, avec password), POST /files/anonymous, GET /files (200+props, isolation, 401), DELETE /files/:id (403, 404, 401, 204) + flux complet |
+| **Download** | `test/download.integration.spec.ts` | GET /download/:token (libre, protégé, expiré, inconnu), POST /download/:token (sans pw, bon pw, mauvais pw, expiré) + 3 flux                                                |
+| **Tags**     | `test/tags.integration.spec.ts`     | GET /tags (200, 401), POST /tags (201, 409 doublon, 201 autre user, 401), DELETE /tags/:id (403, 404, 401, 204) + 2 flux isolation                                          |
 
 ---
 
@@ -57,9 +57,9 @@
 | `src/files/interfaces/file-response.interface.ts` | Modifié — ajout champ `tags: { id: number; name: string }[]`               |
 | `src/files/files.service.ts`                      | Modifié — `toFileResponse()` mappe les tags, `findAll()` inclut `fileTags` |
 | `src/files/dto/upload-file.dto.ts`                | Modifié — ajout `@Transform` pour parser les champs multipart (string → int) |
-| `test/files.integration.spec.ts`                  | Créé — 13 cas de test + flux E2E complet                                   |
-| `test/download.integration.spec.ts`               | Créé — 11 cas de test + 3 flux E2E                                         |
-| `test/tags.integration.spec.ts`                   | Créé — 12 cas de test + 2 flux E2E isolation                               |
+| `test/files.integration.spec.ts`                  | Créé — 13 cas de test + flux complet                                       |
+| `test/download.integration.spec.ts`               | Créé — 11 cas de test + 3 flux                                             |
+| `test/tags.integration.spec.ts`                   | Créé — 12 cas de test + 2 flux isolation                                   |
 
 ---
 

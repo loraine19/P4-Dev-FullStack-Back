@@ -1,9 +1,9 @@
-# **CHANGELOG — feat/api (e2e, performance, maintenance)**
+# **CHANGELOG — feat/api (parcours API, performance, maintenance)**
 
-**Sprint step** : STEP 5 — Tests E2E, couverture Istanbul, livrables OC Étape 5  
+**Sprint step** : STEP 5 — Tests parcours API, couverture Istanbul, livrables OC Étape 5  
 **Branche** : `feat/api`
 
-**Objectif** : Compléter la couverture de tests avec un parcours E2E bout en bout, générer les rapports Istanbul, documenter les performances et les procédures de maintenance.
+**Objectif** : Compléter la couverture de tests avec un parcours API bout en bout (Jest + Supertest), générer les rapports Istanbul, documenter les performances et les procédures de maintenance.
 
 ---
 
@@ -11,10 +11,10 @@
 
 | Thème                     | Ce qui est opérationnel                                                                           |
 | :------------------------ | :------------------------------------------------------------------------------------------------ |
-| **Tests E2E**             | 12/12 — parcours utilisateur complet (register → login → upload → download → tags → logout → 401) |
-| **Coverage Istanbul e2e** | 82.29% statements, 86.48% functions, 84.04% lines                                                 |
+| **Tests parcours API**    | 12/12 — parcours utilisateur complet (register → login → upload → download → tags → logout → 401) |
+| **Coverage Istanbul parcours API** | 82.29% statements, 86.48% functions, 84.04% lines                                          |
 | **MAINTENANCE.md**        | Procédures npm audit, inventaire dépendances, fréquences de mise à jour                           |
-| **TESTING.md**            | Mis à jour — section E2E + critères d'acceptation complets (unit + integration + e2e)             |
+| **TESTING.md**            | Mis à jour — section parcours API + critères d'acceptation complets (unit + integration + parcours API) |
 | **Fix download 500**      | `dto ?? {}` — POST sans body ne plante plus en production                                         |
 
 > `PERF.md` reporté à un commit dédié — section Lighthouse front à mesurer avant livraison.
@@ -23,9 +23,9 @@
 
 ## **Choix techniques**
 
-### **E2E — authentification par cookie**
+### **Parcours API — authentification par cookie**
 
-Le parcours E2E utilise `isMobile: false` → cookie httpOnly `access_token`. Raison : les tests E2E simulent un navigateur web. L'authentification Bearer (mobile) avait été écartée car `logout` ne blackliste pas le token (JWT stateless) — le test d'accès post-logout (step 12) retournerait toujours 200 avec un Bearer valide, ce qui invaliderait le test.
+Le parcours API utilise `isMobile: false` → cookie httpOnly `access_token`. Raison : les tests de parcours API simulent un navigateur web. L'authentification Bearer (mobile) avait été écartée car `logout` ne blackliste pas le token (JWT stateless) — le test d'accès post-logout (step 12) retournerait toujours 200 avec un Bearer valide, ce qui invaliderait le test.
 
 ### **Séquence du parcours**
 
@@ -65,9 +65,9 @@ Quand `POST /download/:token` reçoit un body vide sans `Content-Type: applicati
 | :---------- | :--------------------------- | :------- |
 | Unitaire    | `src/**/*.spec.ts`           | ✅ 12/12 |
 | Intégration | `test/*.integration.spec.ts` | ✅ 45/45 |
-| E2E         | `test/app.e2e-spec.ts`       | ✅ 12/12 |
+| Parcours API | `test/app.e2e-spec.ts`       | ✅ 12/12 |
 
 | Rapport        | Statements | Branches | Functions | Lines  |
 | :------------- | :--------- | :------- | :-------- | :----- |
 | Intégration    | 88.04%     | 68.3%    | 90.54%    | 87.5%  |
-| E2E (Istanbul) | 82.29%     | 61.18%   | 86.48%    | 84.04% |
+| Parcours API (Istanbul) | 82.29%     | 61.18%   | 86.48%    | 84.04% |
