@@ -17,6 +17,7 @@ export const ERROR_MESSAGES = {
     NOT_FOUND: 'Fichier introuvable',
     FORBIDDEN: 'Accès refusé',
     INVALID_EXTENSION: 'Extension de fichier non autorisée',
+    FILE_TOO_LARGE: 'Fichier trop volumineux (maximum 1 Go)',
     INVALID_TAG: 'Tag invalide ou inaccessible',
   },
   DOWNLOAD: {

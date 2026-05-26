@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Controller,
   Delete,
   Get,
@@ -25,6 +26,11 @@ import { CurrentUser } from '../common/decorators/current-user.decorator';
 import type { IJwtPayload } from '../common/interfaces/jwt-payload.interface';
 import { ApiResponse, type IApiResponse } from '../common/helpers/api-response';
 
+// fix: multer config duplicated across both routes — should be extracted to src/files/multer.config.ts
+const FORBIDDEN_EXTENSIONS = new Set([
+  'exe', 'bat', 'cmd', 'com', 'msi', 'scr', 'ps1', 'sh', 'jar', 'app', 'dmg', 'vbs',
+]);
+
 const multerOptions = {
   storage: diskStorage({
     destination: './uploads',
@@ -32,7 +38,14 @@ const multerOptions = {
     filename: (_req: any, file: Express.Multer.File, cb: (error: Error | null, filename: string) => void) =>
       cb(null, `${crypto.randomUUID()}${path.extname(file.originalname)}`),
   }),
-  limits: { fileSize: 1024 * 1024 * 1024 }, // 1Go (US01)
+  limits: { fileSize: 1024 * 1024 * 1024 }, // 1 Go (US01)
+  // validates extension before multer writes to disk
+  fileFilter: (_req: Express.Request, file: Express.Multer.File, cb: (error: Error | null, accept: boolean) => void) => {
+    const ext = path.extname(file.originalname).slice(1).toLowerCase();
+    if (!ext || FORBIDDEN_EXTENSIONS.has(ext))
+      return cb(new BadRequestException('Extension de fichier non autorisée'), false);
+    cb(null, true);
+  },
 };
 
 @Controller('files')

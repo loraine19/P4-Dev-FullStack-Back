@@ -15,10 +15,6 @@ import * as crypto from 'crypto';
 import * as fs from 'fs';
 import * as path from 'path';
 
-const FORBIDDEN_EXTENSIONS = new Set([
-  'exe', 'bat', 'cmd', 'com', 'msi', 'scr', 'ps1', 'sh', 'jar', 'app', 'dmg', 'vbs',
-]);
-
 @Injectable()
 export class FilesService {
   private readonly uploadsDir = path.join(process.cwd(), 'uploads');
@@ -28,7 +24,7 @@ export class FilesService {
     private readonly logger: LoggerService,
   ) {}
 
-  /* TO FILE RESPONSE */
+  /* HELPER */
   private toFileResponse(
     file: {
       id: number;
@@ -58,11 +54,6 @@ export class FilesService {
   /* UPLOAD */
   async upload(file: MulterFile, dto: UploadFileDto, userId?: number): Promise<IFileResponse> {
     const { expirationDays, downloadPassword, tags } = dto;
-
-    const ext = file.originalname.split('.').pop()?.toLowerCase();
-    if (!ext || FORBIDDEN_EXTENSIONS.has(ext)) {
-      throw new BadRequestException(ERROR_MESSAGES.FILES.INVALID_EXTENSION);
-    }
 
     if (tags?.length && userId !== undefined) {
       for (const tagId of tags) {
