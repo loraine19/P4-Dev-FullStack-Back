@@ -76,8 +76,9 @@ Pas de cookie en mode mobile — `access_token` retourné dans le body uniquemen
 
 - Le fichier est renommé en `UUID v4 + extension` côté serveur — le nom d'origine (`originalName`) est stocké séparément en base, jamais utilisé comme chemin disque
 - Le répertoire `uploads/` n'est **jamais servi statiquement** — accès uniquement via `DownloadController` après vérification du `shareToken`
-- Taille maximale : configurable via Multer (1 Go selon specs)
-- Extensions interdites : à valider côté client (front) + filtrage Multer côté serveur
+- Taille maximale : 1 Go (`limits.fileSize` dans `multerOptions`)
+- Extensions interdites : `fileFilter` dans `multerOptions` — valide l'extension **avant** toute écriture sur disque → `cb(new BadRequestException(...), false)` si extension interdite
+- `MulterExceptionFilter` (`@Catch(MulterError)`) : capture `LIMIT_FILE_SIZE` → 400 `FILE_TOO_LARGE` au lieu de laisser filer un 500
 
 **`shareToken`** : `crypto.randomBytes` → UUID v4 — non prédictible, non séquentiel.
 
@@ -87,11 +88,12 @@ Pas de cookie en mode mobile — `access_token` retourné dans le body uniquemen
 
 **Filtres globaux** — aucun stack trace exposé aux clients :
 
-| Filtre                  | Rôle                                                                           |
-| :---------------------- | :----------------------------------------------------------------------------- |
-| `HttpExceptionFilter`   | Formate les exceptions NestJS en `{ status, message }`                         |
-| `PrismaExceptionFilter` | Traduit les codes Prisma (`P2002` unique, `P2025` not found…) en HTTP lisibles |
-| `ErrorFilter`           | Capture les erreurs non gérées — log interne, `500` générique au client        |
+| Filtre                   | Rôle                                                                           |
+| :----------------------- | :----------------------------------------------------------------------------- |
+| `PrismaExceptionFilter`  | Traduit les codes Prisma (`P2002` unique, `P2025` not found…) en HTTP lisibles |
+| `MulterExceptionFilter`  | `@Catch(MulterError)` — `LIMIT_FILE_SIZE` → 400, extension invalide → 400     |
+| `HttpExceptionFilter`    | Formate les exceptions NestJS en `{ status, message }`                         |
+| `ErrorFilter`            | Capture les erreurs non gérées — log interne, `500` générique au client        |
 
 Les messages d'erreur métier sont définis dans les controllers — les services retournent des données brutes sans message exposable.
 
@@ -101,10 +103,13 @@ Les messages d'erreur métier sont définis dans les controllers — les service
 
 ```ts
 app.enableCors({
-  origin: process.env.FRONTEND_URL, // domaine front explicite — pas de wildcard *
-  credentials: true, // nécessaire pour les cookies httpOnly
+  origin: process.env.FRONTEND_URL,          // domaine front explicite — pas de wildcard *
+  credentials: true,                         // nécessaire pour les cookies httpOnly
+  exposedHeaders: ['Content-Disposition'],   // exposé au JS front pour lire le filename au download
 });
 ```
+
+> `origin: '*'` avec `credentials: true` est interdit par la spec CORS (navigateur refuse). `exposedHeaders` est nécessaire car les headers custom sont bloqués par défaut même avec CORS actif.
 
 ---
 
