@@ -9,11 +9,11 @@
 
 ## **Ce qui est en place**
 
-| Module | Endpoints implémentés |
-| :--- | :--- |
-| **Files** | `POST /files` (auth), `POST /files/anonymous` (optionnel), `GET /files` (auth), `DELETE /files/:id` (auth) |
-| **Download** | `GET /download/:token` (public), `POST /download/:token` (public, stream) |
-| **Tags** | `GET /tags` (auth), `POST /tags` (auth), `DELETE /tags/:id` (auth) |
+| Module       | Endpoints implémentés                                                                                      |
+| :----------- | :--------------------------------------------------------------------------------------------------------- |
+| **Files**    | `POST /files` (auth), `POST /files/anonymous` (optionnel), `GET /files` (auth), `DELETE /files/:id` (auth) |
+| **Download** | `GET /download/:token` (public), `POST /download/:token` (public, stream)                                  |
+| **Tags**     | `GET /tags` (auth), `POST /tags` (auth), `DELETE /tags/:id` (auth)                                         |
 
 ---
 
@@ -54,19 +54,19 @@
 
 ## **Fichiers modifiés / créés**
 
-| Fichier | Action |
-| :--- | :--- |
-| `src/common/constants/error-messages.ts` | Modifié — ajout domains `FILES`, `DOWNLOAD`, `TAGS` |
-| `src/files/interfaces/multer-file.interface.ts` | Modifié — nettoyage (suppression import inutile et commentaires) |
-| `src/files/files.module.ts` | Modifié — ajout imports `LoggerModule`, `AuthModule`, provider `PrismaService` |
-| `src/files/files.service.ts` | Implémenté — `upload()`, `findAll()`, `remove()` |
-| `src/files/files.controller.ts` | Implémenté — 4 routes, `diskStorage` Multer, guards |
-| `src/download/download.module.ts` | Modifié — ajout imports `LoggerModule`, provider `PrismaService` |
-| `src/download/download.service.ts` | Implémenté — `getMeta()`, `download()` |
-| `src/download/download.controller.ts` | Implémenté — 2 routes (meta + stream) |
-| `src/tags/tags.module.ts` | Modifié — ajout imports `LoggerModule`, `AuthModule`, provider `PrismaService` |
-| `src/tags/tags.service.ts` | Implémenté — `findAll()`, `create()`, `remove()` |
-| `src/tags/tags.controller.ts` | Implémenté — 3 routes CRUD |
+| Fichier                                         | Action                                                                         |
+| :---------------------------------------------- | :----------------------------------------------------------------------------- |
+| `src/common/constants/error-messages.ts`        | Modifié — ajout domains `FILES`, `DOWNLOAD`, `TAGS`                            |
+| `src/files/interfaces/multer-file.interface.ts` | Modifié — nettoyage (suppression import inutile et commentaires)               |
+| `src/files/files.module.ts`                     | Modifié — ajout imports `LoggerModule`, `AuthModule`, provider `PrismaService` |
+| `src/files/files.service.ts`                    | Implémenté — `upload()`, `findAll()`, `remove()`                               |
+| `src/files/files.controller.ts`                 | Implémenté — 4 routes, `diskStorage` Multer, guards                            |
+| `src/download/download.module.ts`               | Modifié — ajout imports `LoggerModule`, provider `PrismaService`               |
+| `src/download/download.service.ts`              | Implémenté — `getMeta()`, `download()`                                         |
+| `src/download/download.controller.ts`           | Implémenté — 2 routes (meta + stream)                                          |
+| `src/tags/tags.module.ts`                       | Modifié — ajout imports `LoggerModule`, `AuthModule`, provider `PrismaService` |
+| `src/tags/tags.service.ts`                      | Implémenté — `findAll()`, `create()`, `remove()`                               |
+| `src/tags/tags.controller.ts`                   | Implémenté — 3 routes CRUD                                                     |
 
 ---
 

@@ -9,13 +9,13 @@
 
 ## **Ce qui est en place**
 
-| Thème | Ce qui est opérationnel |
-| :--- | :--- |
-| **Tests E2E** | 12/12 — parcours utilisateur complet (register → login → upload → download → tags → logout → 401) |
-| **Coverage Istanbul e2e** | 82.29% statements, 86.48% functions, 84.04% lines |
-| **MAINTENANCE.md** | Procédures npm audit, inventaire dépendances, fréquences de mise à jour |
-| **TESTING.md** | Mis à jour — section E2E + critères d'acceptation complets (unit + integration + e2e) |
-| **Fix download 500** | `dto ?? {}` — POST sans body ne plante plus en production |
+| Thème                     | Ce qui est opérationnel                                                                           |
+| :------------------------ | :------------------------------------------------------------------------------------------------ |
+| **Tests E2E**             | 12/12 — parcours utilisateur complet (register → login → upload → download → tags → logout → 401) |
+| **Coverage Istanbul e2e** | 82.29% statements, 86.48% functions, 84.04% lines                                                 |
+| **MAINTENANCE.md**        | Procédures npm audit, inventaire dépendances, fréquences de mise à jour                           |
+| **TESTING.md**            | Mis à jour — section E2E + critères d'acceptation complets (unit + integration + e2e)             |
+| **Fix download 500**      | `dto ?? {}` — POST sans body ne plante plus en production                                         |
 
 > `PERF.md` reporté à un commit dédié — section Lighthouse front à mesurer avant livraison.
 
@@ -47,27 +47,27 @@ Quand `POST /download/:token` reçoit un body vide sans `Content-Type: applicati
 
 ## **Fichiers modifiés / créés**
 
-| Fichier | Action |
-| :--- | :--- |
-| `test/app.e2e-spec.ts` | Réécrit — parcours cookie 12 étapes, cleanup Prisma `beforeAll`/`afterAll` |
-| `test/jest-e2e.json` | Modifié — config Istanbul : `collectCoverage`, `collectCoverageFrom`, `coverageDirectory` |
-| `package.json` | Modifié — script `test:e2e:cov` ajouté |
-| `src/download/download.service.ts` | Modifié — `const { password } = dto ?? {}` (fix 500 body vide) |
-| `MAINTENANCE.md` | Créé — npm audit, inventaire dépendances, procédures patch/minor/major |
-| `TESTING.md` | Créé — stratégie 3 niveaux, résultats 12+45+12, coverage complète, critères |
-| `coverage-e2e/` | Généré — rapport Istanbul lcov + HTML (gitignoré) |
+| Fichier                            | Action                                                                                    |
+| :--------------------------------- | :---------------------------------------------------------------------------------------- |
+| `test/app.e2e-spec.ts`             | Réécrit — parcours cookie 12 étapes, cleanup Prisma `beforeAll`/`afterAll`                |
+| `test/jest-e2e.json`               | Modifié — config Istanbul : `collectCoverage`, `collectCoverageFrom`, `coverageDirectory` |
+| `package.json`                     | Modifié — script `test:e2e:cov` ajouté                                                    |
+| `src/download/download.service.ts` | Modifié — `const { password } = dto ?? {}` (fix 500 body vide)                            |
+| `MAINTENANCE.md`                   | Créé — npm audit, inventaire dépendances, procédures patch/minor/major                    |
+| `TESTING.md`                       | Créé — stratégie 3 niveaux, résultats 12+45+12, coverage complète, critères               |
+| `coverage-e2e/`                    | Généré — rapport Istanbul lcov + HTML (gitignoré)                                         |
 
 ---
 
 ## **Résultats des suites de tests (état final)**
 
-| Suite | Fichier | Résultat |
-| :--- | :--- | :--- |
-| Unitaire | `src/**/*.spec.ts` | ✅ 12/12 |
+| Suite       | Fichier                      | Résultat |
+| :---------- | :--------------------------- | :------- |
+| Unitaire    | `src/**/*.spec.ts`           | ✅ 12/12 |
 | Intégration | `test/*.integration.spec.ts` | ✅ 45/45 |
-| E2E | `test/app.e2e-spec.ts` | ✅ 12/12 |
+| E2E         | `test/app.e2e-spec.ts`       | ✅ 12/12 |
 
-| Rapport | Statements | Branches | Functions | Lines |
-| :--- | :--- | :--- | :--- | :--- |
-| Intégration | 88.04% | 68.3% | 90.54% | 87.5% |
-| E2E (Istanbul) | 82.29% | 61.18% | 86.48% | 84.04% |
+| Rapport        | Statements | Branches | Functions | Lines  |
+| :------------- | :--------- | :------- | :-------- | :----- |
+| Intégration    | 88.04%     | 68.3%    | 90.54%    | 87.5%  |
+| E2E (Istanbul) | 82.29%     | 61.18%   | 86.48%    | 84.04% |
