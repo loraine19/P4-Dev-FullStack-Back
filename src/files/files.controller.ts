@@ -32,6 +32,7 @@ const multerOptions = {
     filename: (_req: any, file: Express.Multer.File, cb: (error: Error | null, filename: string) => void) =>
       cb(null, `${crypto.randomUUID()}${path.extname(file.originalname)}`),
   }),
+  limits: { fileSize: 1024 * 1024 * 1024 }, // 1Go (US01)
 };
 
 @Controller('files')
