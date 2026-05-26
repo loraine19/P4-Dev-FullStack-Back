@@ -1,5 +1,4 @@
-import { Body, Controller, Get, HttpCode, Param, Post, Res } from '@nestjs/common';
-import type { Response } from 'express';
+import { Body, Controller, Get, HttpCode, Param, Post } from '@nestjs/common';
 import { StreamableFile } from '@nestjs/common';
 import { DownloadService } from './download.service';
 import { DownloadDto } from './dto/download.dto';
@@ -24,8 +23,7 @@ export class DownloadController {
   async download(
     @Param('token') token: string,
     @Body() dto: DownloadDto,
-    @Res({ passthrough: true }) res: Response,
   ): Promise<StreamableFile> {
-    return this.downloadService.download(token, dto, res);
+    return this.downloadService.download(token, dto);
   }
 }

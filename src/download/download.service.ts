@@ -10,7 +10,6 @@ import { ERROR_MESSAGES } from '../common/constants/error-messages';
 import { DownloadDto } from './dto/download.dto';
 import type { IDownloadMeta } from './interfaces/download-meta.interface';
 import { StreamableFile } from '@nestjs/common';
-import type { Response } from 'express';
 import * as bcrypt from 'bcrypt';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -38,7 +37,8 @@ export class DownloadService {
   }
 
   /* DOWNLOAD */
-  async download(shareToken: string, dto: DownloadDto, res: Response): Promise<StreamableFile> {
+  // fix: service no longer receives res — headers set via StreamableFile options (service must not own HTTP layer)
+  async download(shareToken: string, dto: DownloadDto): Promise<StreamableFile> {
     const { password } = dto ?? {};
 
     const file = await this.prisma.file.findUnique({ where: { shareToken } });
@@ -52,12 +52,11 @@ export class DownloadService {
     }
 
     const filePath = path.join(this.uploadsDir, file.filename);
-    res.set({
-      'Content-Type': file.mimeType,
-      'Content-Disposition': `attachment; filename*=UTF-8''${encodeURIComponent(file.originalName)}`,
-    });
 
     this.logger.log(`File downloaded: ${file.filename}`, DownloadService.name);
-    return new StreamableFile(fs.createReadStream(filePath));
+    return new StreamableFile(fs.createReadStream(filePath), {
+      type: file.mimeType,
+      disposition: `attachment; filename*=UTF-8''${encodeURIComponent(file.originalName)}`,
+    });
   }
 }
