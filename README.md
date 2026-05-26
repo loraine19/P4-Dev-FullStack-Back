@@ -23,7 +23,7 @@ Les fichiers expirés sont **automatiquement supprimés** (disque + base) par un
 
 | Technologie       | Version | Rôle                                     |
 | ----------------- | ------- | ---------------------------------------- |
-| NestJS            | ^10     | Framework Node.js                        |
+| NestJS            | ^11     | Framework Node.js                        |
 | TypeScript        | strict  | Typage statique                          |
 | Prisma            | ^6      | ORM + migrations                         |
 | PostgreSQL        | 16      | Base de données                          |
@@ -38,22 +38,31 @@ Les fichiers expirés sont **automatiquement supprimés** (disque + base) par un
 ```
 src/
 ├── prisma/
-│   └── prisma.service.ts         ← PrismaService (singleton)
+│   └── prisma.service.ts
 ├── common/
+│   ├── constants/
+│   │   └── error-messages.ts
+│   ├── decorators/
+│   │   └── current-user.decorator.ts
 │   ├── filters/
+│   │   ├── error.filter.ts
 │   │   ├── http-exception.filter.ts
 │   │   └── prisma-exception.filter.ts
 │   ├── guards/
-│   │   ├── jwt-auth.guard.ts
+│   │   ├── jwt-auth.guard.ts         ← JWT manuel (sans Passport)
 │   │   └── optional-jwt-auth.guard.ts
-│   ├── middlewares/
-│   │   └── logger.middleware.ts
-│   ├── decorators/
-│   │   └── current-user.decorator.ts
-│   └── interfaces/
-│       ├── jwt-payload.interface.ts
-│       └── request-with-user.interface.ts
-├── auth/                         ← Register / Login → JWT
+│   ├── helpers/
+│   │   └── api-response.ts
+│   ├── interfaces/
+│   │   ├── jwt-payload.interface.ts
+│   │   └── request-with-user.interface.ts
+│   ├── logger/
+│   │   ├── logger.module.ts
+│   │   └── logger.service.ts
+│   └── middlewares/
+│       └── logger.middleware.ts
+├── cron-task/                    ← Suppression fichiers expirés (EVERY_HOUR)
+├── auth/                         ← Register / Login / Logout → JWT
 ├── files/                        ← Upload / Liste / Suppression
 ├── download/                     ← Téléchargement via shareToken (public)
 └── tags/                         ← CRUD tags utilisateur
