@@ -1,5 +1,4 @@
 import {
-  BadRequestException,
   ForbiddenException,
   Injectable,
   NotFoundException,
@@ -10,6 +9,7 @@ import { ERROR_MESSAGES } from '../common/constants/error-messages';
 import { UploadFileDto } from './dto/upload-file.dto';
 import type { IFileResponse } from './interfaces/file-response.interface';
 import type { MulterFile } from './interfaces/multer-file.interface';
+import { TagsService } from '../tags/tags.service';
 import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
 import * as fs from 'fs';
@@ -22,6 +22,7 @@ export class FilesService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly logger: LoggerService,
+    private readonly tagsService: TagsService,
   ) {}
 
   /* HELPER */
@@ -84,8 +85,7 @@ export class FilesService {
 
     if (tags?.length && userId !== undefined) {
       for (const tagId of tags) {
-        const tag = await this.prisma.tag.findFirst({ where: { id: tagId, userId } });
-        if (!tag) throw new BadRequestException(ERROR_MESSAGES.FILES.INVALID_TAG);
+        await this.tagsService.validateOwnership(tagId, userId);
       }
     }
 
