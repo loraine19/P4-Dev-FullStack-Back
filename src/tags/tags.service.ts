@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   ForbiddenException,
   Injectable,
@@ -21,6 +22,12 @@ export class TagsService {
   async findAll(userId: number): Promise<ITagResponse[]> {
     const tags = await this.prisma.tag.findMany({ where: { userId } });
     return tags.map(({ id, name }) => ({ id, name }));
+  }
+
+  /* VALIDATE OWNERSHIP */
+  async validateOwnership(tagId: number, userId: number): Promise<void> {
+    const tag = await this.prisma.tag.findFirst({ where: { id: tagId, userId } });
+    if (!tag) throw new BadRequestException(ERROR_MESSAGES.TAGS.NOT_FOUND);
   }
 
   /* CREATE */
