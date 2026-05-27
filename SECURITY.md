@@ -88,12 +88,12 @@ Pas de cookie en mode mobile — `access_token` retourné dans le body uniquemen
 
 **Filtres globaux** — aucun stack trace exposé aux clients :
 
-| Filtre                   | Rôle                                                                           |
-| :----------------------- | :----------------------------------------------------------------------------- |
-| `PrismaExceptionFilter`  | Traduit les codes Prisma (`P2002` unique, `P2025` not found…) en HTTP lisibles |
-| `MulterExceptionFilter`  | `@Catch(MulterError)` — `LIMIT_FILE_SIZE` → 400, extension invalide → 400     |
-| `HttpExceptionFilter`    | Formate les exceptions NestJS en `{ status, message }`                         |
-| `ErrorFilter`            | Capture les erreurs non gérées — log interne, `500` générique au client        |
+| Filtre                  | Rôle                                                                           |
+| :---------------------- | :----------------------------------------------------------------------------- |
+| `PrismaExceptionFilter` | Traduit les codes Prisma (`P2002` unique, `P2025` not found…) en HTTP lisibles |
+| `MulterExceptionFilter` | `@Catch(MulterError)` — `LIMIT_FILE_SIZE` → 400, extension invalide → 400      |
+| `HttpExceptionFilter`   | Formate les exceptions NestJS en `{ status, message }`                         |
+| `ErrorFilter`           | Capture les erreurs non gérées — log interne, `500` générique au client        |
 
 Les messages d'erreur métier sont définis dans les controllers — les services retournent des données brutes sans message exposable.
 
@@ -103,9 +103,9 @@ Les messages d'erreur métier sont définis dans les controllers — les service
 
 ```ts
 app.enableCors({
-  origin: process.env.FRONTEND_URL,          // domaine front explicite — pas de wildcard *
-  credentials: true,                         // nécessaire pour les cookies httpOnly
-  exposedHeaders: ['Content-Disposition'],   // exposé au JS front pour lire le filename au download
+  origin: process.env.FRONTEND_URL, // domaine front explicite — pas de wildcard *
+  credentials: true, // nécessaire pour les cookies httpOnly
+  exposedHeaders: ['Content-Disposition'], // exposé au JS front pour lire le filename au download
 });
 ```
 

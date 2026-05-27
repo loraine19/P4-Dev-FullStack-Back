@@ -99,24 +99,41 @@ npm run test:e2e:cov        # lancer le parcours + rapport de couverture → cov
 
 ---
 
-## **5. Tests E2E navigateur — Cypress (EN ATTENTE)**
+## **5. Tests E2E navigateur — Cypress**
 
-### Statut : ⏳ non implémenté
+**Outil** : Cypress 15 (installé dans `P4-Dev-FullStack-Front`)
+**Périmètre** : front React → API NestJS → PostgreSQL Docker — parcours utilisateur complet depuis le navigateur.
 
-Cypress est l'outil imposé par OC pour les tests end-to-end full-stack (navigateur → front React → API NestJS → PostgreSQL). Ces tests vérifient les parcours utilisateur complets depuis l'interface graphique.
+### Commandes
 
-**Raison de l'absence** : non implémenté dans le périmètre du sprint. Les parcours fonctionnels sont validés par les tests parcours API (section 4) et par les tests manuels en local.
+```bash
+# dans P4-Dev-FullStack-Front/ — avec back + front démarrés
+npm run cy:open    # mode interactif (navigateur)
+npm run cy:run     # mode headless (CI)
 
-**Parcours prévus (non écrits) :**
+# prérequis
+docker compose up -d    # BDD PostgreSQL (côté back)
+npm run start:dev       # NestJS back (port 3000)
+npm run dev             # Vite front  (port 5173)
+```
 
-| Parcours Cypress prévu              | Priorité |
-| :---------------------------------- | :------- |
-| Register → Login → MySpace          | Haute    |
-| Upload fichier → lien de partage    | Haute    |
-| Download via lien public            | Haute    |
-| Upload avec mot de passe → Download | Moyenne  |
-| Suppression de fichier              | Moyenne  |
-| Gestion des tags (CRUD)             | Basse    |
+### Parcours implémentés — 13 cas de test
+
+| Fichier                      | Parcours                                    | Tests  |
+| :--------------------------- | :------------------------------------------ | :----- |
+| `01-auth.cy.ts`              | Register → Login → MySpace                  | 3      |
+| `02-upload.cy.ts`            | Upload fichier → MySpace + ext interdite    | 3      |
+| `03-myspace.cy.ts`           | Liste fichiers + suppression                | 2      |
+| `04-download.cy.ts`          | Download public + token invalide            | 3      |
+| `05-download-password.cy.ts` | Download protégé (bon/mauvais mot de passe) | 3      |
+| **Total**                    |                                             | **13** |
+
+### Stratégie technique
+
+- **Setup programmatique** : `cy.registerViaApi`, `cy.loginViaApi` via `cy.request()` — le cookie httpOnly est préservé automatiquement par Cypress pour les `cy.visit` suivants
+- **Setup fichiers** : `cy.task('uploadTestFile')` — upload multipart depuis Node.js avec Bearer token (`isMobile: true`) pour éviter le cookie httpOnly dans le contexte Node
+- **Vérification download** : `cy.intercept()` + `cy.wait('@download').its('response.statusCode')` — Cypress capture la réponse binaire sans avoir à vérifier le fichier téléchargé physiquement
+- **Isolation** : chaque spec utilise un email unique (`email-${Date.now()}@test.local`) — pas de dépendance entre les fichiers de test
 
 ---
 
@@ -154,18 +171,18 @@ Rapport HTML : `coverage/lcov-report/index.html`
 
 ## **7. Critères d'acceptation**
 
-| Critère                            | Seuil              | Résultat      |
-| :--------------------------------- | :----------------- | :------------ |
-| Tests unitaires                    | 100% pass          | ✅ 12/12      |
-| Tests d'intégration                | 100% pass          | ✅ 45/45      |
-| Tests parcours API                 | 100% pass          | ✅ 12/12      |
-| Tests E2E Cypress (OC obligatoire) | 100% pass          | ⏳ EN ATTENTE |
-| Coverage statements (intégration)  | ≥ 70%              | ✅ 88.04%     |
-| Coverage lines (intégration)       | ≥ 70%              | ✅ 87.5%      |
-| Coverage functions (intégration)   | ≥ 70%              | ✅ 90.54%     |
-| Coverage statements (parcours API) | ≥ 70%              | ✅ 82.29%     |
-| Coverage lines (parcours API)      | ≥ 70%              | ✅ 84.04%     |
-| 0 erreur TypeScript                | `npx tsc --noEmit` | ✅ 0 erreur   |
+| Critère                            | Seuil              | Résultat    |
+| :--------------------------------- | :----------------- | :---------- |
+| Tests unitaires                    | 100% pass          | ✅ 12/12    |
+| Tests d'intégration                | 100% pass          | ✅ 45/45    |
+| Tests parcours API                 | 100% pass          | ✅ 12/12    |
+| Tests E2E Cypress (OC obligatoire) | 100% pass          | ✅ 13/13    |
+| Coverage statements (intégration)  | ≥ 70%              | ✅ 88.04%   |
+| Coverage lines (intégration)       | ≥ 70%              | ✅ 87.5%    |
+| Coverage functions (intégration)   | ≥ 70%              | ✅ 90.54%   |
+| Coverage statements (parcours API) | ≥ 70%              | ✅ 82.29%   |
+| Coverage lines (parcours API)      | ≥ 70%              | ✅ 84.04%   |
+| 0 erreur TypeScript                | `npx tsc --noEmit` | ✅ 0 erreur |
 
 ---
 
