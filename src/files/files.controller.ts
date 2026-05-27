@@ -26,7 +26,7 @@ import { CurrentUser } from '../common/decorators/current-user.decorator';
 import type { IJwtPayload } from '../common/interfaces/jwt-payload.interface';
 import { ApiResponse, type IApiResponse } from '../common/helpers/api-response';
 
-// fix: multer config duplicated across both routes — should be extracted to src/files/multer.config.ts
+
 const FORBIDDEN_EXTENSIONS = new Set([
   'exe', 'bat', 'cmd', 'com', 'msi', 'scr', 'ps1', 'sh', 'jar', 'app', 'dmg', 'vbs',
 ]);

@@ -1,5 +1,5 @@
 /* ERROR MESSAGES */
-// grouped by domain — use ERROR_MESSAGES.DOMAIN.KEY for full literal-type safety
+// grouped by domain -  use ERROR_MESSAGES.DOMAIN.KEY for full literal-type safety
 export const ERROR_MESSAGES = {
   COMMON: {
     INTERNAL_SERVER_ERROR: 'Erreur interne du serveur',

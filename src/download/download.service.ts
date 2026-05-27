@@ -37,7 +37,7 @@ export class DownloadService {
   }
 
   /* DOWNLOAD */
-  // fix: service no longer receives res — headers set via StreamableFile options (service must not own HTTP layer)
+  // fix: service no longer receives res -  headers set via StreamableFile options (service must not own HTTP layer)
   async download(shareToken: string, dto: DownloadDto): Promise<StreamableFile> {
     const { password } = dto ?? {};
 

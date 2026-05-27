@@ -80,7 +80,7 @@ export class AuthService {
     const token = await this.generateToken(user.id);
     const userPublic = this.toUserPublic(user);
     if (isMobile) {
-      this.logger.warn('Mobile login — token returned in body', AuthService.name);
+      this.logger.warn('Mobile login -  token returned in body', AuthService.name);
       return { user: userPublic, access_token: token };
     } else this.setAuthCookie(res, token);
     return { user: userPublic };
@@ -88,7 +88,7 @@ export class AuthService {
 
   /* LOGOUT */
   async logout(userId: number, res: Response): Promise<void> {
-    // guard already verified the token — findUniqueOrThrow ensures user still exists
+    // guard already verified the token -  findUniqueOrThrow ensures user still exists
     await this.prisma.user.findUniqueOrThrow({ where: { id: userId } });
     this.clearAuthCookie(res);
   }

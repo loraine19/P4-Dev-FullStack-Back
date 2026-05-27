@@ -23,7 +23,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
       typeof body === 'string'
         ? body
         : (body as { message?: string | string[] }).message;
-    // class-validator returns an array of messages — join them
+    // class-validator returns an array of messages -  join them
     const message = Array.isArray(raw)
       ? raw.join(', ')
       : (raw ?? exception.message);

@@ -15,7 +15,7 @@ export class CronTaskService {
   ) {}
 
   /* DELETE EXPIRED FILES */
-  // runs every hour — removes expired files from disk then from database
+  // runs every hour -  removes expired files from disk then from database
   @Cron(CronExpression.EVERY_HOUR)
   async deleteExpiredFiles() {
     const expiredFiles = await this.prisma.file.findMany({
