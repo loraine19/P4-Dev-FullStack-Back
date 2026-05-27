@@ -177,7 +177,7 @@ describe('Files routes (integration)', () => {
       expect(res.body.data[0]).toHaveProperty('tags');
     });
 
-    /* 3.2 ISOLATION — userB ne voit pas les fichiers de userA */
+    /* 3.2 ISOLATION -  userB ne voit pas les fichiers de userA */
     it('3.2 isolation : userB ne voit pas les fichiers de userA', async () => {
       const resA = await request(app.getHttpServer()).get(`/${PREFIX}/files`).set('Cookie', cookie);
       const resB = await request(app.getHttpServer()).get(`/${PREFIX}/files`).set('Cookie', cookieB);
@@ -226,7 +226,7 @@ describe('Files routes (integration)', () => {
     });
   });
 
-  /* 5 E2E — FLUX UPLOAD + HISTORIQUE + SUPPRESSION */
+  /* 5 E2E -  FLUX UPLOAD + HISTORIQUE + SUPPRESSION */
   describe('E2E: login → upload → GET /files → DELETE', () => {
     it('5.1 flux complet upload + historique + suppression', async () => {
       /* upload */
@@ -238,7 +238,7 @@ describe('Files routes (integration)', () => {
       expect(upload.status).toBe(201);
       const fileId: number = upload.body.data.id;
 
-      /* liste — fichier présent */
+      /* liste -  fichier présent */
       const list = await request(app.getHttpServer()).get(`/${PREFIX}/files`).set('Cookie', cookie);
       expect(list.status).toBe(200);
       expect(list.body.data.some((f: { id: number }) => f.id === fileId)).toBe(true);
@@ -249,7 +249,7 @@ describe('Files routes (integration)', () => {
         .set('Cookie', cookie);
       expect(del.status).toBe(204);
 
-      /* liste — fichier absent */
+      /* liste -  fichier absent */
       const list2 = await request(app.getHttpServer()).get(`/${PREFIX}/files`).set('Cookie', cookie);
       expect(list2.body.data.some((f: { id: number }) => f.id === fileId)).toBe(false);
     });

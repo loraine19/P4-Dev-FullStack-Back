@@ -143,7 +143,7 @@ describe('Tags routes (integration)', () => {
     });
   });
 
-  /* 4 E2E — FLUX TAGS + ISOLATION */
+  /* 4 E2E -  FLUX TAGS + ISOLATION */
   describe('E2E: login → createTag → listTags → deleteTag', () => {
     it('4.1 flux complet : création → présent dans la liste → suppression', async () => {
       /* create */
@@ -154,11 +154,11 @@ describe('Tags routes (integration)', () => {
       expect(create.status).toBe(201);
       const tagId: number = create.body.data.id;
 
-      /* list userA — tag présent */
+      /* list userA -  tag présent */
       const listA = await request(app.getHttpServer()).get(`/${PREFIX}/tags`).set('Cookie', cookie);
       expect(listA.body.data.some((t: { id: number }) => t.id === tagId)).toBe(true);
 
-      /* list userB — tag absent (isolation) */
+      /* list userB -  tag absent (isolation) */
       const listB = await request(app.getHttpServer()).get(`/${PREFIX}/tags`).set('Cookie', cookieB);
       expect(listB.body.data.some((t: { id: number }) => t.id === tagId)).toBe(false);
 
@@ -168,7 +168,7 @@ describe('Tags routes (integration)', () => {
         .set('Cookie', cookie);
       expect(del.status).toBe(204);
 
-      /* list userA — tag disparu */
+      /* list userA -  tag disparu */
       const listA2 = await request(app.getHttpServer()).get(`/${PREFIX}/tags`).set('Cookie', cookie);
       expect(listA2.body.data.some((t: { id: number }) => t.id === tagId)).toBe(false);
     });

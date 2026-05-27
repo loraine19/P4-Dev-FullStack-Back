@@ -14,7 +14,7 @@ const E2E_PASSWORD = 'Password1';
 const E2E_NAME = 'E2E';
 const PREFIX = 'api/v1';
 
-/* E2E — FULL USER JOURNEY */
+/* E2E -  FULL USER JOURNEY */
 describe('Full user journey (e2e)', () => {
   let app: INestApplication;
   let prisma: PrismaService;
@@ -52,7 +52,7 @@ describe('Full user journey (e2e)', () => {
     await app.close();
   });
 
-  /* STEP 1 — REGISTER */
+  /* STEP 1 -  REGISTER */
   it('1. register -> 201', async () => {
     const res = await request(app.getHttpServer())
       .post(`/${PREFIX}/auth/register`)
@@ -62,7 +62,7 @@ describe('Full user journey (e2e)', () => {
     expect(res.body.status).toBe('success');
   });
 
-  /* STEP 2 — LOGIN */
+  /* STEP 2 -  LOGIN */
   it('2. login (web) -> 200 + httpOnly cookie', async () => {
     const res = await request(app.getHttpServer())
       .post(`/${PREFIX}/auth/login`)
@@ -73,7 +73,7 @@ describe('Full user journey (e2e)', () => {
     cookie = res.headers['set-cookie'] as string[];
   });
 
-  /* STEP 3 — UPLOAD */
+  /* STEP 3 -  UPLOAD */
   it('3. upload file -> 201 + shareToken', async () => {
     const res = await request(app.getHttpServer())
       .post(`/${PREFIX}/files`)
@@ -87,7 +87,7 @@ describe('Full user journey (e2e)', () => {
     fileId = res.body.data.id as number;
   });
 
-  /* STEP 4 — LIST FILES */
+  /* STEP 4 -  LIST FILES */
   it('4. get files list -> 200 + array', async () => {
     const res = await request(app.getHttpServer())
       .get(`/${PREFIX}/files`)
@@ -99,7 +99,7 @@ describe('Full user journey (e2e)', () => {
     expect(res.body.data.some((f: { id: number }) => f.id === fileId)).toBe(true);
   });
 
-  /* STEP 5 — DOWNLOAD METADATA */
+  /* STEP 5 -  DOWNLOAD METADATA */
   it('5. get download metadata -> 200', async () => {
     const res = await request(app.getHttpServer())
       .get(`/${PREFIX}/download/${shareToken}`)
@@ -109,7 +109,7 @@ describe('Full user journey (e2e)', () => {
     expect(res.body.data.filename).toBeDefined();
   });
 
-  /* STEP 6 — DOWNLOAD FILE */
+  /* STEP 6 -  DOWNLOAD FILE */
   it('6. download file -> 200 stream', async () => {
     const res = await request(app.getHttpServer())
       .post(`/${PREFIX}/download/${shareToken}`)
@@ -119,7 +119,7 @@ describe('Full user journey (e2e)', () => {
     expect(res.headers['content-disposition']).toMatch(/attachment/);
   });
 
-  /* STEP 7 — CREATE TAG */
+  /* STEP 7 -  CREATE TAG */
   it('7. create tag -> 201', async () => {
     const res = await request(app.getHttpServer())
       .post(`/${PREFIX}/tags`)
@@ -131,7 +131,7 @@ describe('Full user journey (e2e)', () => {
     tagId = res.body.data.id as number;
   });
 
-  /* STEP 8 — LIST TAGS */
+  /* STEP 8 -  LIST TAGS */
   it('8. list tags -> 200 + tag present', async () => {
     const res = await request(app.getHttpServer())
       .get(`/${PREFIX}/tags`)
@@ -142,7 +142,7 @@ describe('Full user journey (e2e)', () => {
     expect(res.body.data.some((t: { id: number }) => t.id === tagId)).toBe(true);
   });
 
-  /* STEP 9 — DELETE TAG */
+  /* STEP 9 -  DELETE TAG */
   it('9. delete tag -> 204', async () => {
     await request(app.getHttpServer())
       .delete(`/${PREFIX}/tags/${tagId}`)
@@ -150,7 +150,7 @@ describe('Full user journey (e2e)', () => {
       .expect(204);
   });
 
-  /* STEP 10 — DELETE FILE */
+  /* STEP 10 -  DELETE FILE */
   it('10. delete file -> 204', async () => {
     await request(app.getHttpServer())
       .delete(`/${PREFIX}/files/${fileId}`)
@@ -158,7 +158,7 @@ describe('Full user journey (e2e)', () => {
       .expect(204);
   });
 
-  /* STEP 11 — LOGOUT */
+  /* STEP 11 -  LOGOUT */
   it('11. logout -> 200', async () => {
     const res = await request(app.getHttpServer())
       .post(`/${PREFIX}/auth/logout`)
@@ -168,7 +168,7 @@ describe('Full user journey (e2e)', () => {
     expect(res.body.status).toBe('success');
   });
 
-  /* STEP 12 — PROTECTED ROUTE WITHOUT AUTH */
+  /* STEP 12 -  PROTECTED ROUTE WITHOUT AUTH */
   it('12. get files without cookie -> 401', async () => {
     await request(app.getHttpServer())
       .get(`/${PREFIX}/files`)

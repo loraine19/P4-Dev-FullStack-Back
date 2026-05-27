@@ -110,7 +110,7 @@ describe('Download routes (integration)', () => {
     await app.close();
   });
 
-  /* 1 GET /download/:token — MÉTADONNÉES */
+  /* 1 GET /download/:token -  MÉTADONNÉES */
   describe(`GET /${PREFIX}/download/:token`, () => {
     it('1.1 token valide (sans mot de passe) -> 200 + meta complète', async () => {
       const res = await request(app.getHttpServer()).get(`/${PREFIX}/download/${shareTokenFree}`);
@@ -139,7 +139,7 @@ describe('Download routes (integration)', () => {
     });
   });
 
-  /* 2 POST /download/:token — TÉLÉCHARGEMENT */
+  /* 2 POST /download/:token -  TÉLÉCHARGEMENT */
   describe(`POST /${PREFIX}/download/:token`, () => {
     it('2.1 fichier sans mot de passe -> 200 + content-disposition', async () => {
       const res = await request(app.getHttpServer())
@@ -171,7 +171,7 @@ describe('Download routes (integration)', () => {
     });
   });
 
-  /* 3 E2E — FLUX DOWNLOAD COMPLETS */
+  /* 3 E2E -  FLUX DOWNLOAD COMPLETS */
   describe('E2E: upload → getMeta → download', () => {
     it('3.1 flux download libre (upload anonyme)', async () => {
       const upload = await request(app.getHttpServer())
@@ -192,7 +192,7 @@ describe('Download routes (integration)', () => {
       expect(dl.status).toBe(200);
     });
 
-    it('3.2 flux download protégé — bon mot de passe', async () => {
+    it('3.2 flux download protégé -  bon mot de passe', async () => {
       const upload = await request(app.getHttpServer())
         .post(`/${PREFIX}/files`)
         .set('Cookie', cookie)
@@ -208,7 +208,7 @@ describe('Download routes (integration)', () => {
       expect(dl.status).toBe(200);
     });
 
-    it('3.3 flux download protégé — mauvais mot de passe -> 401', async () => {
+    it('3.3 flux download protégé -  mauvais mot de passe -> 401', async () => {
       const upload = await request(app.getHttpServer())
         .post(`/${PREFIX}/files`)
         .set('Cookie', cookie)
