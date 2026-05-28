@@ -1,9 +1,9 @@
-# **CHANGELOG — feat/api (back métier)**
+# **CHANGELOG - feat/api (back métier)**
 
-**Sprint step** : STEP 4 — Implémentation des modules métier (Files, Download, Tags)
+**Sprint step** : STEP 4 - Implémentation des modules métier (Files, Download, Tags)
 **Branche** : `feat/api` (depuis `feat/auth`)
 
-**Objectif** : Implémenter les 3 modules fonctionnels du backend DataShare — upload/gestion de fichiers, téléchargement sécurisé par token, gestion de tags utilisateur.
+**Objectif** : Implémenter les 3 modules fonctionnels du backend DataShare - upload/gestion de fichiers, téléchargement sécurisé par token, gestion de tags utilisateur.
 
 ---
 
@@ -19,28 +19,28 @@
 
 ## **Choix techniques**
 
-### **Files — upload et suppression**
+### **Files - upload et suppression**
 
 - Extension validée côté service contre un `Set` de 12 extensions interdites (exe, bat, cmd, com, msi, scr, ps1, sh, jar, app, dmg, vbs)
 - `filename` stocké en base = UUID + extension originale (généré par Multer `diskStorage` dans le controller)
-- `shareToken` = `crypto.randomUUID()` — identifiant public de partage, jamais le nom réel
-- `downloadPasswordHash` = `bcrypt.hash(password, 10)` si fourni — jamais exposé dans `IFileResponse`
+- `shareToken` = `crypto.randomUUID()` - identifiant public de partage, jamais le nom réel
+- `downloadPasswordHash` = `bcrypt.hash(password, 10)` si fourni - jamais exposé dans `IFileResponse`
 - `expiresAt` = `now + (expirationDays ?? 7) * 86400000`
 - Tags validés ownership avant création (tag doit appartenir à `userId`) → `BadRequestException` sinon
 - Création fichier + tags dans une `$transaction` Prisma pour garantir l'atomicité
 - Upload anonyme via `OptionalJwtAuthGuard` : `userId` null en base, aucun tag possible
-- Suppression : `fs.unlinkSync` du disque puis `prisma.file.delete` — erreur silencieuse si fichier absent du disque (déjà purgé par le cron)
+- Suppression : `fs.unlinkSync` du disque puis `prisma.file.delete` - erreur silencieuse si fichier absent du disque (déjà purgé par le cron)
 
-### **Download — token public + protection mot de passe**
+### **Download - token public + protection mot de passe**
 
 - `GET /:token` → métadonnées uniquement (`IDownloadMeta`) : pas de stream, pas de lien de téléchargement direct
 - `POST /:token` → stream via `StreamableFile` + `Content-Disposition: attachment` avec nom original encodé UTF-8
-- Lien expiré → `GoneException` (410) — distingué du 404 pour permettre un message front explicite
-- Mot de passe : vérification `bcrypt.compare` — même réponse 401 si absent ou invalide (pas de distinction pour éviter l'énumération)
+- Lien expiré → `GoneException` (410) - distingué du 404 pour permettre un message front explicite
+- Mot de passe : vérification `bcrypt.compare` - même réponse 401 si absent ou invalide (pas de distinction pour éviter l'énumération)
 
-### **Tags — CRUD utilisateur isolé**
+### **Tags - CRUD utilisateur isolé**
 
-- `@@unique([name, userId])` en base — doublon → `ConflictException` (409)
+- `@@unique([name, userId])` en base - doublon → `ConflictException` (409)
 - `ForbiddenException` si tentative de suppression d'un tag appartenant à un autre user
 - Aucune exposition de `userId` dans `ITagResponse` → `{ id, name }` uniquement
 
@@ -56,17 +56,17 @@
 
 | Fichier                                         | Action                                                                         |
 | :---------------------------------------------- | :----------------------------------------------------------------------------- |
-| `src/common/constants/error-messages.ts`        | Modifié — ajout domains `FILES`, `DOWNLOAD`, `TAGS`                            |
-| `src/files/interfaces/multer-file.interface.ts` | Modifié — nettoyage (suppression import inutile et commentaires)               |
-| `src/files/files.module.ts`                     | Modifié — ajout imports `LoggerModule`, `AuthModule`, provider `PrismaService` |
-| `src/files/files.service.ts`                    | Implémenté — `upload()`, `findAll()`, `remove()`                               |
-| `src/files/files.controller.ts`                 | Implémenté — 4 routes, `diskStorage` Multer, guards                            |
-| `src/download/download.module.ts`               | Modifié — ajout imports `LoggerModule`, provider `PrismaService`               |
-| `src/download/download.service.ts`              | Implémenté — `getMeta()`, `download()`                                         |
-| `src/download/download.controller.ts`           | Implémenté — 2 routes (meta + stream)                                          |
-| `src/tags/tags.module.ts`                       | Modifié — ajout imports `LoggerModule`, `AuthModule`, provider `PrismaService` |
-| `src/tags/tags.service.ts`                      | Implémenté — `findAll()`, `create()`, `remove()`                               |
-| `src/tags/tags.controller.ts`                   | Implémenté — 3 routes CRUD                                                     |
+| `src/common/constants/error-messages.ts`        | Modifié - ajout domains `FILES`, `DOWNLOAD`, `TAGS`                            |
+| `src/files/interfaces/multer-file.interface.ts` | Modifié - nettoyage (suppression import inutile et commentaires)               |
+| `src/files/files.module.ts`                     | Modifié - ajout imports `LoggerModule`, `AuthModule`, provider `PrismaService` |
+| `src/files/files.service.ts`                    | Implémenté - `upload()`, `findAll()`, `remove()`                               |
+| `src/files/files.controller.ts`                 | Implémenté - 4 routes, `diskStorage` Multer, guards                            |
+| `src/download/download.module.ts`               | Modifié - ajout imports `LoggerModule`, provider `PrismaService`               |
+| `src/download/download.service.ts`              | Implémenté - `getMeta()`, `download()`                                         |
+| `src/download/download.controller.ts`           | Implémenté - 2 routes (meta + stream)                                          |
+| `src/tags/tags.module.ts`                       | Modifié - ajout imports `LoggerModule`, `AuthModule`, provider `PrismaService` |
+| `src/tags/tags.service.ts`                      | Implémenté - `findAll()`, `create()`, `remove()`                               |
+| `src/tags/tags.controller.ts`                   | Implémenté - 3 routes CRUD                                                     |
 
 ---
 

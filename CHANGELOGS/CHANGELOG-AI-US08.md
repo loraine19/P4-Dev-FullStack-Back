@@ -1,6 +1,6 @@
-# CHANGELOG — US08 Tags (IA-assistée)
+# CHANGELOG - US08 Tags (IA-assistée)
 
-**User Story :** US08 — Gestion des tags utilisateur
+**User Story :** US08 - Gestion des tags utilisateur
 **Outil IA :** GitHub Copilot (modèle Claude Sonnet)
 **Commit IA :** `f12cdf4 feat(ai): implement tags module for US08`
 **Branche dédiée :** `feat/ai-us08-tags`
@@ -42,7 +42,7 @@ Le code généré par IA est isolé sur une branche dédiée et tracé par un pr
 
 Pilotage en plusieurs prompts itératifs avec contexte projet explicite. Extraits significatifs :
 
-### Prompt 1 — Cadrage architectural
+### Prompt 1 - Cadrage architectural
 
 > Tu génères du code pour un projet NestJS 11 + Prisma 6 + PostgreSQL.
 > Conventions du projet :
@@ -75,11 +75,11 @@ Pilotage en plusieurs prompts itératifs avec contexte projet explicite. Extrait
 >
 > Format réponse attendu : `{ id, name }` (jamais exposer `userId` côté API).
 
-### Prompt 2 — Spécification du DTO
+### Prompt 2 - Spécification du DTO
 
-> Crée `src/tags/dto/create-tag.dto.ts` avec validation `class-validator` : `name` requis, string, `@MinLength(1)`, `@MaxLength(30)`. Pas de propriété `userId` dans le DTO — il vient de `@CurrentUser()`.
+> Crée `src/tags/dto/create-tag.dto.ts` avec validation `class-validator` : `name` requis, string, `@MinLength(1)`, `@MaxLength(30)`. Pas de propriété `userId` dans le DTO - il vient de `@CurrentUser()`.
 
-### Prompt 3 — Tests d'intégration
+### Prompt 3 - Tests d'intégration
 
 > Génère `test/tags.integration.spec.ts` avec Supertest sur une vraie instance Nest + Prisma (BDD Docker dédiée tests).
 > Scénarios attendus :
@@ -95,7 +95,7 @@ Pilotage en plusieurs prompts itératifs avec contexte projet explicite. Extrait
 >
 > Utilise un `beforeEach` qui purge la table et réinjecte deux users + leurs tags via `prisma.tag.createMany`.
 
-### Prompt 4 — Revue de sécurité
+### Prompt 4 - Revue de sécurité
 
 > Relis le code généré et confirme que :
 >
@@ -113,10 +113,10 @@ La sortie IA a été relue ligne par ligne avant intégration. Points vérifiés
 | :----------------------- | :----------------------------------------------------------------------------------- |
 | Sécurité multi-tenant    | Filtre `where: { userId }` présent sur toutes les requêtes `findMany` / `findUnique` |
 | Ownership sur mutations  | Vérification `tag.userId !== userId` sur `DELETE` → `ForbiddenException` 403         |
-| Hygiène d'exposition API | Mapping explicite `({ id, name })` — `userId` jamais sérialisé dans la réponse       |
+| Hygiène d'exposition API | Mapping explicite `({ id, name })` - `userId` jamais sérialisé dans la réponse       |
 | Conformité architecture  | `ApiResponse.success()` côté controller, service rend la donnée brute                |
 | Validation DTO           | `@IsString` + `@MinLength(1)` + `@MaxLength(30)` sur `name`                          |
-| Couverture tests         | 12/12 tests d'intégration passants — `tags.integration.spec.ts`                      |
+| Couverture tests         | 12/12 tests d'intégration passants - `tags.integration.spec.ts`                      |
 
 **Résultat tests : 12/12 passants. Couverture intégration : 88 % statements.**
 
@@ -124,7 +124,7 @@ La sortie IA a été relue ligne par ligne avant intégration. Points vérifiés
 
 ## 6. Ajustements apportés après génération
 
-Le code généré sert de point de départ — il est systématiquement adapté pour s'aligner sur les conventions du projet et durcir la sécurité. Détail des ajustements opérés sur la sortie IA :
+Le code généré sert de point de départ - il est systématiquement adapté pour s'aligner sur les conventions du projet et durcir la sécurité. Détail des ajustements opérés sur la sortie IA :
 
 | Domaine                  | Ajustement appliqué                                                                                            |
 | :----------------------- | :------------------------------------------------------------------------------------------------------------- |
@@ -134,7 +134,7 @@ Le code généré sert de point de départ — il est systématiquement adapté 
 | Conformité `ApiResponse` | Habillage des retours du service par `ApiResponse.success(message, data)` côté controller                      |
 | Validation DTO           | Ajout de `@MaxLength(30)` sur `name` pour borner la taille côté entrée (en complément de `@MinLength(1)`)      |
 | Couverture de tests      | Complément du fichier `tags.integration.spec.ts` avec scénarios 401 / 403 / 404 / 409 (cas d'erreur)           |
-| Commentaires de code     | Suppression des artefacts générés (commentaires `// AI:`, blocs explicatifs verbeux) — alignement style projet |
+| Commentaires de code     | Suppression des artefacts générés (commentaires `// AI:`, blocs explicatifs verbeux) - alignement style projet |
 
 Ces ajustements relèvent du travail standard d'intégration d'une génération IA dans un projet existant : l'IA produit un squelette générique conforme au prompt, le développeur l'aligne sur les invariants du projet (sécurité, conventions, style, couverture de tests).
 
@@ -142,7 +142,7 @@ Ces ajustements relèvent du travail standard d'intégration d'une génération 
 
 ## 7. Bilan de pilotage
 
-- **Apport IA :** génération rapide du squelette NestJS conforme aux conventions injectées dans le prompt — gain de temps significatif sur le boilerplate (module + controller + service + DTO + spec d'intégration).
+- **Apport IA :** génération rapide du squelette NestJS conforme aux conventions injectées dans le prompt - gain de temps significatif sur le boilerplate (module + controller + service + DTO + spec d'intégration).
 - **Rôle du développeur :** cadrage en amont (conventions, schéma Prisma, contrats d'API), revue systématique de chaque sortie, validation par tests d'intégration sur une vraie BDD.
 - **Leçon de pilotage :** la qualité d'une génération IA est directement proportionnelle à la qualité du cadrage initial (conventions explicites, schéma fourni, scénarios de test listés). Un prompt vague produit du code générique ; un prompt contextualisé produit du code intégrable.
 

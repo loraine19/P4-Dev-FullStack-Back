@@ -1,6 +1,6 @@
-# Logger & Cron — Comment ça marche
+# Logger & Cron - Comment ça marche
 
-## 1. LoggerService — Logger personnalisé
+## 1. LoggerService - Logger personnalisé
 
 ### Pourquoi un logger custom ?
 
@@ -12,11 +12,12 @@ NestJS fournit un logger natif basique (`Logger` du package `@nestjs/common`). I
 
 ```
 [11/05/2026 14:23:01] [LOG]   [AuthService]   User registered: test@mail.com
-[11/05/2026 14:23:45] [WARN]  [AuthService]   Mobile login — token returned in body
+[11/05/2026 14:23:45] [WARN]  [AuthService]   Mobile login -  token returned in body
 [11/05/2026 14:24:10] [ERROR] [ErrorFilter]   500: Unexpected token | POST /api/v1/auth/login
 ```
 
 Chaque ligne dans `logs/YYYY-MM-DD.log` contient :
+
 - Timestamp (format FR)
 - Niveau (`LOG` / `WARN` / `ERROR`)
 - Contexte (nom du service qui log)
@@ -25,6 +26,7 @@ Chaque ligne dans `logs/YYYY-MM-DD.log` contient :
 ### Rotation des logs
 
 Quand un fichier dépasse **10 Mo**, le logger :
+
 1. Ferme le stream du fichier courant
 2. Relit la date du jour
 3. Ouvre un nouveau stream sur un nouveau fichier
@@ -47,14 +49,14 @@ export class MyService {
   constructor(private readonly logger: LoggerService) {}
 
   doSomething() {
-    this.logger.log('Message', MyService.name);  // context = 'MyService'
+    this.logger.log('Message', MyService.name); // context = 'MyService'
     this.logger.warn('Attention', MyService.name);
     this.logger.error('Erreur', stack, MyService.name);
   }
 }
 ```
 
-> Toujours passer `ClassName.name` comme second argument — c'est le contexte affiché dans les logs.
+> Toujours passer `ClassName.name` comme second argument - c'est le contexte affiché dans les logs.
 
 ### Cycle de vie
 
@@ -73,21 +75,24 @@ Requête → [PrismaExceptionFilter] → [ErrorFilter] → [HttpExceptionFilter]
 ```
 
 NestJS associe chaque exception au filtre le plus spécifique :
+
 - `ConflictException`, `UnauthorizedException` → `HttpExceptionFilter` (catch `HttpException`)
 - `PrismaClientKnownRequestError` → `PrismaExceptionFilter`
 - Toute autre `Error` JS → `ErrorFilter`
 
 Chaque filtre :
+
 1. Logge l'erreur avec `LoggerService`
 2. Retourne `ApiResponse.error(message)` → format uniforme `{ status: 'error', message, data: null }`
 
 ---
 
-## 3. CronTaskService — Tâches planifiées
+## 3. CronTaskService - Tâches planifiées
 
 ### Pourquoi une tâche cron ?
 
 Les fichiers uploadés ont une date d'expiration (`expiresAt`). Il faut un mécanisme automatique pour :
+
 1. **Supprimer les fichiers du disque** (`uploads/`)
 2. **Supprimer les entrées de la base** (Prisma)
 
@@ -156,7 +161,7 @@ Expressions disponibles : `EVERY_MINUTE`, `EVERY_HOUR`, `EVERY_DAY_AT_MIDNIGHT`,
 
 ---
 
-## 4. Flux complet — Exemple : upload expiré
+## 4. Flux complet - Exemple : upload expiré
 
 ```
 T+0h    → User uploads file (expiresAt = now + 24h)

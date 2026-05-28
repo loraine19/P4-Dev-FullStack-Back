@@ -1,191 +1,230 @@
-# **TESTING.md — DataShare Backend**
+- # **TESTING.md \-**
 
-**Branche** : `feat/api` — **Date** : 24/05/2026
-
----
-
-## **1. Stratégie de tests**
-
-Trois niveaux de tests complémentaires couvrent la totalité de la logique métier :
-
-| Niveau           | Outil            | Scope                                          | Isolation                                      |
-| :--------------- | :--------------- | :--------------------------------------------- | :--------------------------------------------- |
-| **Unitaire**     | Jest             | Guard JWT + AuthService                        | Mocks totaux — aucune BDD, aucun HTTP          |
-| **Intégration**  | Jest + Supertest | Tous les modules (auth, files, download, tags) | Stack NestJS complète + PostgreSQL Docker réel |
-| **Parcours API** | Jest + Supertest | Parcours utilisateur complet (12 étapes)       | Stack NestJS complète + PostgreSQL Docker réel |
+## **DataShare Backend**
 
 ---
 
-## **2. Tests unitaires**
+[1\. Stratégie de tests](#1.-stratégie-de-tests)
 
-### Logique
+[2\. Tests unitaires \- Jest](#2.-tests-unitaires---jest)
 
-Teste une seule classe en isolation — les dépendances (Prisma, JwtService, bcrypt) sont remplacées par des `jest.fn()`. Pattern AAA (`/* Arrange */` / `/* Act */` / `/* Assert */`) dans chaque `it()`.
+[A. 16 suites \- 69/69 ✅](#16-suites---69/69-✅)
 
-### Commandes
+[b. Commandes](#b.-commandes)
 
-```bash
-npm test              # lancer les tests unitaires
-npm run test:cov      # avec rapport de couverture → coverage/lcov-report/index.html
-```
+[3\. Tests d'intégration \- Supertest](#3.-tests-d'intégration---supertest)
 
-### Résultats — 12/12 ✅
+[a. 4 suites \- 45/45 ✅](#4-suites---45/45-✅)
 
-| Suite        | Fichier                                    | Tests     | Statut |
-| :----------- | :----------------------------------------- | :-------- | :----- |
-| JwtAuthGuard | `src/common/guards/jwt-auth.guard.spec.ts` | 6/6       | ✅     |
-| AuthService  | `src/auth/auth.service.spec.ts`            | 6/6       | ✅     |
-| **Total**    |                                            | **12/12** | **✅** |
+[b. Commandes](#commandes)
+
+[4\. Parcours API \- Supertest](#4.-parcours-api---supertest)
+
+[a. 1 suite \- 12/12 ✅ (test/app.e2e-spec.ts)](<#1-suite---12/12-✅-(test/app.e2e-spec.ts)>)
+
+[b. Commandes](#commandes-1)
+
+[5\. Tests E2E navigateur \- Cypress](#5.-tests-e2e-navigateur---cypress)
+
+[a. 7 fichiers \- 26/26 ✅](#7-fichiers---26/26-✅)
+
+[b. Commandes](#b.-commandes-1)
+
+[6\. Rapports](#6.-rapports)
+
+[a. 📂 Dossier rapports de test](#📂-dossier-rapports-de-test)
+
+[b. Tableau récapitulatif](#tableau-récapitulatif)
+
+[7\. Couverture](#7.-couverture)
+
+[a. Intégration (référence principale)](<#intégration-(référence-principale)>)
+
+[b. Parcours API (Istanbul)](<#parcours-api-(istanbul)>)
+
+[8\. Critères d'acceptation](#8.-critères-d'acceptation)
+
+[9\. Détail des cas de test](#9.-détail-des-cas-de-test)
+
+[a. 📊 Plan détaillé complet](#📊-plan-détaillé-complet)
+
+#
+
+# 1\. Stratégie de tests {#1.-stratégie-de-tests}
+
+| Niveau         | Outil             | Périmètre                                             | Commande                   |
+| :------------- | :---------------- | :---------------------------------------------------- | :------------------------- |
+| Unitaire       | Jest              | Guards, Services, Controllers, Filters                | `npm test`                 |
+| Intégration    | Jest \+ Supertest | Endpoints REST complets avec BDD réelle               | `npm run test:integration` |
+| Parcours API   | Jest \+ Supertest | Scénarios multi-étapes (register → upload → download) | `npm run test:e2e`         |
+| E2E navigateur | Cypress 15        | Front React → API → PostgreSQL                        | P4-FRONT/TESTING.md        |
 
 ---
 
-## **3. Tests d'intégration**
+# 2\. Tests unitaires \- Jest {#2.-tests-unitaires---jest}
 
-### Logique
+1. ## 16 suites \- 69/69 ✅ {#16-suites---69/69-✅}
 
-Monte l'application NestJS complète en mémoire (`Test.createTestingModule` + `AppModule`) — même stack que la production : `cookieParser`, `ValidationPipe`, guards réels, filtres d'exception, Prisma sur PostgreSQL Docker. Tests exécutés en `--runInBand` (séquentiel, BDD partagée).
+| Suite                           | Module         | Classe testée         | Tests  |
+| :------------------------------ | :------------- | :-------------------- | :----: |
+| jwt-auth.guard.spec.ts          | common/guards  | JwtAuthGuard          |   6    |
+| optional-jwt-auth.guard.spec.ts | common/guards  | OptionalJwtAuthGuard  |   2    |
+| auth.service.spec.ts            | auth           | AuthService           |   6    |
+| auth.controller.spec.ts         | auth           | AuthController        |   3    |
+| error.filter.spec.ts            | common/filters | ErrorFilter           |   2    |
+| http-exception.filter.spec.ts   | common/filters | HttpExceptionFilter   |   3    |
+| multer-exception.filter.spec.ts | common/filters | MulterExceptionFilter |   2    |
+| prisma-exception.filter.spec.ts | common/filters | PrismaExceptionFilter |   4    |
+| api-response.spec.ts            | common/helpers | ApiResponse           |   4    |
+| cron-task.service.spec.ts       | cron-task      | CronTaskService       |   3    |
+| download.service.spec.ts        | download       | DownloadService       |   8    |
+| download.controller.spec.ts     | download       | DownloadController    |   3    |
+| files.service.spec.ts           | files          | FilesService          |   7    |
+| files.controller.spec.ts        | files          | FilesController       |   5    |
+| tags.service.spec.ts            | tags           | TagsService           |   8    |
+| tags.controller.spec.ts         | tags           | TagsController        |   3    |
+| **Total**                       |                |                       | **69** |
 
-### Commandes
+## b. Commandes {#b.-commandes}
 
-```bash
-docker compose up -d         # démarrer la BDD PostgreSQL
-npm run test:integration     # lancer les 4 suites → coverage-integration/lcov-report/index.html
-```
-
-### Résultats — 45/45 ✅
-
-| Suite     | Fichier                             | Tests     | Statut |
-| :-------- | :---------------------------------- | :-------- | :----- |
-| Auth      | `test/auth.integration.spec.ts`     | 9/9       | ✅     |
-| Files     | `test/files.integration.spec.ts`    | 13/13     | ✅     |
-| Download  | `test/download.integration.spec.ts` | 11/11     | ✅     |
-| Tags      | `test/tags.integration.spec.ts`     | 12/12     | ✅     |
-| **Total** |                                     | **45/45** | **✅** |
+- npm test \# run all unit tests
+- npm run test:cov \# avec couverture (coverage/)
 
 ---
 
-## **4. Tests parcours API (Jest + Supertest)**
+# 3\. Tests d'intégration \- Supertest {#3.-tests-d'intégration---supertest}
 
-### Logique
+1. ## 4 suites \- 45/45 ✅ {#4-suites---45/45-✅}
 
-Exécute un parcours utilisateur complet en séquence sur l'API NestJS réelle + PostgreSQL Docker — de l'inscription jusqu'à la révocation d'accès. Les requêtes HTTP sont émises par Supertest (côté back uniquement, pas de navigateur). Chaque étape construit sur les données créées par la précédente (upload → token → download → tag → suppression). La couverture Istanbul est collectée sur l'ensemble du code source `src/`.
+L'API NestJS est montée in-process via `Test.createTestingModule()`. La BDD PostgreSQL est réelle (Docker).
 
-> ⚠️ **Ce niveau ne remplace pas Cypress.** Ces tests valident les routes HTTP du back-end en séquence. Les tests E2E navigateur (front → back → BDD) sont gérés par Cypress — voir section 5.
+| Suite                        | Endpoints couverts                                      | Tests  |
+| :--------------------------- | :------------------------------------------------------ | :----: |
+| auth.integration.spec.ts     | POST /auth/register · /auth/login · /auth/logout        |   9    |
+| files.integration.spec.ts    | POST /files · GET /files · DELETE /files/:id            |   13   |
+| download.integration.spec.ts | GET /download/meta/:token · GET /download/stream/:token |   11   |
+| tags.integration.spec.ts     | POST /tags · GET /tags · DELETE /tags/:id               |   12   |
+| **Total**                    |                                                         | **45** |
 
-### Commandes
+2. ## Commandes {#commandes}
 
-```bash
-docker compose up -d        # démarrer la BDD PostgreSQL
-npm run test:e2e:cov        # lancer le parcours + rapport de couverture → coverage-e2e/lcov-report/index.html
-```
+- npm run test:integration \# run integration tests
 
-### Résultats — 12/12 ✅
+---
 
-| Étape     | Description                                               | HTTP attendu | Statut       |
-| :-------- | :-------------------------------------------------------- | :----------- | :----------- |
-| 1         | Inscription (`POST /auth/register`)                       | 201          | ✅           |
-| 2         | Connexion web → cookie httpOnly                           | 200          | ✅           |
-| 3         | Upload fichier → récupération shareToken                  | 201          | ✅           |
-| 4         | Liste des fichiers → fileId présent                       | 200          | ✅           |
-| 5         | Métadonnées de téléchargement                             | 200          | ✅           |
-| 6         | Téléchargement stream → `content-disposition: attachment` | 200          | ✅           |
-| 7         | Création de tag                                           | 201          | ✅           |
-| 8         | Liste des tags → tag présent                              | 200          | ✅           |
-| 9         | Suppression de tag                                        | 204          | ✅           |
-| 10        | Suppression de fichier                                    | 204          | ✅           |
-| 11        | Déconnexion (cookie effacé)                               | 200          | ✅           |
-| 12        | Accès sans cookie → non autorisé                          | 401          | ✅           |
+##
+
+# 4\. Parcours API \- Supertest {#4.-parcours-api---supertest}
+
+1. ## **1 suite \- 12/12 ✅** (`test/app.e2e-spec.ts`) {#1-suite---12/12-✅-(test/app.e2e-spec.ts)}
+
+Scénario complet enchaîné dans un seul processus Jest.
+
+| Étape     | Description                                               | HTTP attendu |    Statut    |
+| :-------- | :-------------------------------------------------------- | :----------: | :----------: |
+| 1         | Inscription (`POST /auth/register`)                       |     201      |      ✅      |
+| 2         | Connexion web → cookie httpOnly                           |     200      |      ✅      |
+| 3         | Upload fichier → récupération `shareToken`                |     201      |      ✅      |
+| 4         | Liste des fichiers → `fileId` présent                     |     200      |      ✅      |
+| 5         | Métadonnées de téléchargement                             |     200      |      ✅      |
+| 6         | Téléchargement stream → `content-disposition: attachment` |     200      |      ✅      |
+| 7         | Création de tag                                           |     201      |      ✅      |
+| 8         | Liste des tags → tag présent                              |     200      |      ✅      |
+| 9         | Suppression de tag                                        |     204      |      ✅      |
+| 10        | Suppression de fichier                                    |     204      |      ✅      |
+| 11        | Déconnexion (cookie effacé)                               |     200      |      ✅      |
+| 12        | Accès sans cookie → non autorisé                          |     401      |      ✅      |
 | **Total** |                                                           |              | **✅ 12/12** |
 
----
+2. ## Commandes {#commandes-1}
 
-## **5. Tests E2E navigateur — Cypress**
-
-**Outil** : Cypress 15 (installé dans `P4-Dev-FullStack-Front`)
-**Périmètre** : front React → API NestJS → PostgreSQL Docker — parcours utilisateur complet depuis le navigateur.
-
-### Commandes
-
-```bash
-# dans P4-Dev-FullStack-Front/ — avec back + front démarrés
-npm run cy:open    # mode interactif (navigateur)
-npm run cy:run     # mode headless (CI)
-
-# prérequis
-docker compose up -d    # BDD PostgreSQL (côté back)
-npm run start:dev       # NestJS back (port 3000)
-npm run dev             # Vite front  (port 5173)
-```
-
-### Parcours implémentés — 13 cas de test
-
-| Fichier                      | Parcours                                    | Tests  |
-| :--------------------------- | :------------------------------------------ | :----- |
-| `01-auth.cy.ts`              | Register → Login → MySpace                  | 3      |
-| `02-upload.cy.ts`            | Upload fichier → MySpace + ext interdite    | 3      |
-| `03-myspace.cy.ts`           | Liste fichiers + suppression                | 2      |
-| `04-download.cy.ts`          | Download public + token invalide            | 3      |
-| `05-download-password.cy.ts` | Download protégé (bon/mauvais mot de passe) | 3      |
-| **Total**                    |                                             | **13** |
-
-### Stratégie technique
-
-- **Setup programmatique** : `cy.registerViaApi`, `cy.loginViaApi` via `cy.request()` — le cookie httpOnly est préservé automatiquement par Cypress pour les `cy.visit` suivants
-- **Setup fichiers** : `cy.task('uploadTestFile')` — upload multipart depuis Node.js avec Bearer token (`isMobile: true`) pour éviter le cookie httpOnly dans le contexte Node
-- **Vérification download** : `cy.intercept()` + `cy.wait('@download').its('response.statusCode')` — Cypress capture la réponse binaire sans avoir à vérifier le fichier téléchargé physiquement
-- **Isolation** : chaque spec utilise un email unique (`email-${Date.now()}@test.local`) — pas de dépendance entre les fichiers de test
+- npm run test:e2e \# run parcours API
+- npm run test:e2e:cov \# avec couverture Istanbul (coverage-e2e/)
 
 ---
 
-## **6. Rapport de couverture**
+##
 
-### Parcours API (Istanbul — parcours complet)
+# 5\. Tests E2E navigateur \- Cypress {#5.-tests-e2e-navigateur---cypress}
 
-| Module     | Statements | Branches   | Functions  | Lines      |
-| :--------- | :--------- | :--------- | :--------- | :--------- |
+**Outil** : Cypress 15 (installé dans `P4-Dev-FullStack-Front`)  
+**Périmètre** : front React → API NestJS → PostgreSQL Docker \- parcours utilisateur complet depuis le navigateur.
+
+1. ## **7 fichiers \- 26/26 ✅** {#7-fichiers---26/26-✅}
+
+Voir front
+
+## b. Commandes {#b.-commandes-1}
+
+- \# dans P4-Dev-FullStack-Front/ \- avec back \+ front démarrés
+- docker compose up \-d \# PostgreSQL (côté back)
+- npm run start:dev \# NestJS back (port 3000\)
+- npm run dev \# Vite front (port 5173\)
+- npm run cy:run \# mode headless (CI)
+- npm run cy:open \# mode interactif (navigateur)
+
+---
+
+# 6\. Rapports {#6.-rapports}
+
+1. ## [📂 Dossier rapports de test](https://drive.google.com/drive/folders/1JdFQJ9lacjx9COVTo0rhXiFc_TZhAKva?usp=drive_link) {#📂-dossier-rapports-de-test}
+
+2. ## Tableau récapitulatif {#tableau-récapitulatif}
+
+| Rapport                        | Chemin                                        | Généré par                   |
+| :----------------------------- | :-------------------------------------------- | :--------------------------- |
+| Couverture unitaire (HTML)     | `coverage/lcov-report/index.html`             | `npm run test:cov`           |
+| Couverture intégration (HTML)  | `coverage-integration/lcov-report/index.html` | `npm run test:integration`   |
+| Couverture parcours API (HTML) | `coverage-e2e/lcov-report/index.html`         | `npm run test:e2e:cov`       |
+| Newman \- collections auth     | `postman/newman-report.html`                  | `npm run newman:auth:report` |
+| Newman \- collections API      | `postman/index.html`                          | `npm run newman:api:report`  |
+
+---
+
+##
+
+# 7\. Couverture {#7.-couverture}
+
+1. ## Intégration (référence principale) {#intégration-(référence-principale)}
+
+Couverture mesurée sur les 4 suites d'intégration \- représentative du comportement réel de l'API.
+
+| Module     | Statements | Branches  | Functions  |   Lines   |
+| :--------- | :--------: | :-------: | :--------: | :-------: |
+| **Global** | **88.04%** | **68.3%** | **90.54%** | **87.5%** |
+| auth       |    100%    |  79.62%   |    100%    |   100%    |
+| files      |   91.02%   |  74.19%   |   86.66%   |   91.3%   |
+| download   |   95.91%   |  78.94%   |    100%    |   100%    |
+| tags       |    100%    |  79.41%   |    100%    |   100%    |
+
+Rapport HTML : `coverage-integration/lcov-report/index.html`
+
+2. ## Parcours API (Istanbul) {#parcours-api-(istanbul)}
+
+| Module     | Statements |  Branches  | Functions  |   Lines    |
+| :--------- | :--------: | :--------: | :--------: | :--------: |
 | **Global** | **82.29%** | **61.18%** | **86.48%** | **84.04%** |
 
-Rapport HTML complet : `coverage-e2e/lcov-report/index.html`
-
-### Intégration (référence principale)
-
-Couverture mesurée sur les 4 suites d'intégration — représentative du comportement réel de l'API.
-
-| Module     | Statements | Branches  | Functions  | Lines     |
-| :--------- | :--------- | :-------- | :--------- | :-------- |
-| **Global** | **88.04%** | **68.3%** | **90.54%** | **87.5%** |
-| auth       | 100%       | 79.62%    | 100%       | 100%      |
-| files      | 91.02%     | 74.19%    | 86.66%     | 91.3%     |
-| download   | 95.91%     | 78.94%    | 100%       | 100%      |
-| tags       | 100%       | 79.41%    | 100%       | 100%      |
-
-Rapport HTML complet : `coverage-integration/lcov-report/index.html`
-
-### Unitaire (scope auth)
-
-Les tests unitaires couvrent exclusivement le module `auth` (guard + service). Le taux global est faible car le rapport porte sur tous les fichiers source — les modules files, download, tags sont couverts par les tests d'intégration.
-
-Rapport HTML : `coverage/lcov-report/index.html`
+Rapport HTML : `coverage-e2e/lcov-report/index.html`
 
 ---
 
-## **7. Critères d'acceptation**
+# 8\. Critères d'acceptation {#8.-critères-d'acceptation}
 
-| Critère                            | Seuil              | Résultat    |
-| :--------------------------------- | :----------------- | :---------- |
-| Tests unitaires                    | 100% pass          | ✅ 12/12    |
-| Tests d'intégration                | 100% pass          | ✅ 45/45    |
-| Tests parcours API                 | 100% pass          | ✅ 12/12    |
-| Tests E2E Cypress (OC obligatoire) | 100% pass          | ✅ 13/13    |
-| Coverage statements (intégration)  | ≥ 70%              | ✅ 88.04%   |
-| Coverage lines (intégration)       | ≥ 70%              | ✅ 87.5%    |
-| Coverage functions (intégration)   | ≥ 70%              | ✅ 90.54%   |
-| Coverage statements (parcours API) | ≥ 70%              | ✅ 82.29%   |
-| Coverage lines (parcours API)      | ≥ 70%              | ✅ 84.04%   |
+| Critère                            |       Seuil        |  Résultat   |
+| :--------------------------------- | :----------------: | :---------: |
+| Tests unitaires                    |     100% pass      |  ✅ 69/69   |
+| Tests d'intégration                |     100% pass      |  ✅ 45/45   |
+| Tests parcours API                 |     100% pass      |  ✅ 12/12   |
+| Tests E2E Cypress                  |     100% pass      |  ✅ 26/26   |
+| Coverage statements (intégration)  |       ≥ 70%        |  ✅ 88.04%  |
+| Coverage lines (intégration)       |       ≥ 70%        |  ✅ 87.5%   |
+| Coverage functions (intégration)   |       ≥ 70%        |  ✅ 90.54%  |
+| Coverage statements (parcours API) |       ≥ 70%        |  ✅ 82.29%  |
 | 0 erreur TypeScript                | `npx tsc --noEmit` | ✅ 0 erreur |
 
 ---
 
-## **8. Détail des cas de test**
+# 9\. Détail des cas de test {#9.-détail-des-cas-de-test}
 
-Voir [TEST_PLAN.md](./TEST_PLAN.md) pour le détail complet de chaque cas de test par module (US, endpoint, attendu, statut).
+1. ## [📊 Plan détaillé complet](https://docs.google.com/spreadsheets/d/e/2PACX-1vQKMx-Go8curn85rzLBfdVDXZYMuyo_8tVePBiEKMCvAa8R0qwPmmR5kwxnHjEF-A0RURbUuNiYcimJ/pubhtml?gid=906604324&single=true) {#📊-plan-détaillé-complet}

@@ -76,7 +76,7 @@ Request → Guard → Controller → Service → PrismaService → PostgreSQL
 
 - **Controllers** : routing HTTP, validation DTO, extraction @CurrentUser
 - **Services** : logique métier, hachage, génération shareToken
-- **Fichiers** : stockés dans `uploads/` (jamais servi statiquement — accès via DownloadController uniquement)
+- **Fichiers** : stockés dans `uploads/` (jamais servi statiquement - accès via DownloadController uniquement)
 
 ## Prérequis
 

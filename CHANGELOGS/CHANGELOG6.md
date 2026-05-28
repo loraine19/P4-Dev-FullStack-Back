@@ -1,6 +1,6 @@
-# **CHANGELOG — feat/api (parcours API, performance, maintenance)**
+# **CHANGELOG - feat/api (parcours API, performance, maintenance)**
 
-**Sprint step** : STEP 5 — Tests parcours API, couverture Istanbul, livrables OC Étape 5  
+**Sprint step** : STEP 5 - Tests parcours API, couverture Istanbul, livrables OC Étape 5  
 **Branche** : `feat/api`
 
 **Objectif** : Compléter la couverture de tests avec un parcours API bout en bout (Jest + Supertest), générer les rapports Istanbul, documenter les performances et les procédures de maintenance.
@@ -11,37 +11,37 @@
 
 | Thème                              | Ce qui est opérationnel                                                                                 |
 | :--------------------------------- | :------------------------------------------------------------------------------------------------------ |
-| **Tests parcours API**             | 12/12 — parcours utilisateur complet (register → login → upload → download → tags → logout → 401)       |
+| **Tests parcours API**             | 12/12 - parcours utilisateur complet (register → login → upload → download → tags → logout → 401)       |
 | **Coverage Istanbul parcours API** | 82.29% statements, 86.48% functions, 84.04% lines                                                       |
 | **MAINTENANCE.md**                 | Procédures npm audit, inventaire dépendances, fréquences de mise à jour                                 |
-| **TESTING.md**                     | Mis à jour — section parcours API + critères d'acceptation complets (unit + integration + parcours API) |
-| **Fix download 500**               | `dto ?? {}` — POST sans body ne plante plus en production                                               |
+| **TESTING.md**                     | Mis à jour - section parcours API + critères d'acceptation complets (unit + integration + parcours API) |
+| **Fix download 500**               | `dto ?? {}` - POST sans body ne plante plus en production                                               |
 
-> `PERF.md` reporté à un commit dédié — section Lighthouse front à mesurer avant livraison.
+> `PERF.md` reporté à un commit dédié - section Lighthouse front à mesurer avant livraison.
 
 ---
 
 ## **Choix techniques**
 
-### **Parcours API — authentification par cookie**
+### **Parcours API - authentification par cookie**
 
-Le parcours API utilise `isMobile: false` → cookie httpOnly `access_token`. Raison : les tests de parcours API simulent un navigateur web. L'authentification Bearer (mobile) avait été écartée car `logout` ne blackliste pas le token (JWT stateless) — le test d'accès post-logout (step 12) retournerait toujours 200 avec un Bearer valide, ce qui invaliderait le test.
+Le parcours API utilise `isMobile: false` → cookie httpOnly `access_token`. Raison : les tests de parcours API simulent un navigateur web. L'authentification Bearer (mobile) avait été écartée car `logout` ne blackliste pas le token (JWT stateless) - le test d'accès post-logout (step 12) retournerait toujours 200 avec un Bearer valide, ce qui invaliderait le test.
 
 ### **Séquence du parcours**
 
-Les 12 étapes sont strictement ordonnées — chaque étape réutilise les données créées par la précédente (`shareToken`, `fileId`, `tagId`). Ce couplage est intentionnel : il reflète un flux utilisateur réel et valide la cohérence du système de bout en bout.
+Les 12 étapes sont strictement ordonnées - chaque étape réutilise les données créées par la précédente (`shareToken`, `fileId`, `tagId`). Ce couplage est intentionnel : il reflète un flux utilisateur réel et valide la cohérence du système de bout en bout.
 
 ### **Istanbul vs Babel provider**
 
-`coverageProvider: "istanbul"` retiré du `jest-e2e.json` — causait une coverage 0% avec `ts-jest`. Le provider par défaut de Jest (babel en interne, instrumente via `ts-jest`) fonctionne correctement et donne les mêmes résultats qu'en intégration.
+`coverageProvider: "istanbul"` retiré du `jest-e2e.json` - causait une coverage 0% avec `ts-jest`. Le provider par défaut de Jest (babel en interne, instrumente via `ts-jest`) fonctionne correctement et donne les mêmes résultats qu'en intégration.
 
-### **Fix `download.service.ts` — `dto ?? {}`**
+### **Fix `download.service.ts` - `dto ?? {}`**
 
 Quand `POST /download/:token` reçoit un body vide sans `Content-Type: application/json`, NestJS passe `undefined` au lieu d'une instance `DownloadDto`. La destructuration `const { password } = dto` plantait avec une erreur 500. La correction `const { password } = dto ?? {}` rend le service robuste aux clients qui n'envoient pas de corps explicite pour les fichiers sans mot de passe.
 
 ### **Vulnérabilités npm audit**
 
-19 vulnérabilités détectées (1 critical, 10 high, 8 moderate) — toutes dans `newman-reporter-htmlextra` (devDependency, rapport HTML Postman). Le code production (`dependencies`) est exempt de toute vulnérabilité. `npm audit fix --force` downgraderait vers une version avec breaking change (1.22.5) sans bénéfice sécurité réel. Documenté dans `MAINTENANCE.md` section 5.
+19 vulnérabilités détectées (1 critical, 10 high, 8 moderate) - toutes dans `newman-reporter-htmlextra` (devDependency, rapport HTML Postman). Le code production (`dependencies`) est exempt de toute vulnérabilité. `npm audit fix --force` downgraderait vers une version avec breaking change (1.22.5) sans bénéfice sécurité réel. Documenté dans `MAINTENANCE.md` section 5.
 
 ---
 
@@ -49,30 +49,13 @@ Quand `POST /download/:token` reçoit un body vide sans `Content-Type: applicati
 
 | Fichier                            | Action                                                                                    |
 | :--------------------------------- | :---------------------------------------------------------------------------------------- |
-| `test/app.e2e-spec.ts`             | Réécrit — parcours cookie 12 étapes, cleanup Prisma `beforeAll`/`afterAll`                |
-| `test/jest-e2e.json`               | Modifié — config Istanbul : `collectCoverage`, `collectCoverageFrom`, `coverageDirectory` |
-| `package.json`                     | Modifié — script `test:e2e:cov` ajouté                                                    |
-| `src/download/download.service.ts` | Modifié — `const { password } = dto ?? {}` (fix 500 body vide)                            |
-| `MAINTENANCE.md`                   | Créé — npm audit, inventaire dépendances, procédures patch/minor/major                    |
-| `TESTING.md`                       | Créé — stratégie 3 niveaux, résultats 12+45+12, coverage complète, critères               |
-| `coverage-e2e/`                    | Généré — rapport Istanbul lcov + HTML (gitignoré)                                         |
-
----
-
-## **Correctifs architecturaux (post-tests)**
-
-Bugs détectés lors des tests manuels, corrigés dans le même sprint.
-
-| Fichier                                         | Fix                                                                              |
-| :---------------------------------------------- | :------------------------------------------------------------------------------- |
-| `src/files/files.controller.ts`                 | `fileFilter` dans `multerOptions` — validation extension **avant** écriture disque |
-| `src/files/files.service.ts`                    | Suppression du check extension redondant (déplacé dans `fileFilter`)             |
-| `src/common/filters/multer-exception.filter.ts` | **Nouveau** — `@Catch(MulterError)` → 400 au lieu de 500                         |
-| `src/common/constants/error-messages.ts`        | Ajout `FILE_TOO_LARGE`                                                           |
-| `src/download/download.controller.ts`           | Suppression `@Res` / `res: Response` — plus de couplage HTTP dans le service     |
-| `src/download/download.service.ts`              | `StreamableFile({ type, disposition })` remplace `res.set()`                     |
-| `src/main.ts`                                   | CORS `exposedHeaders: ['Content-Disposition']` — fix filename `'fichier'` front  |
-| `docker-compose.yml`                            | TODO volume `uploads/` si NestJS dockerisé                                       |
+| `test/app.e2e-spec.ts`             | Réécrit - parcours cookie 12 étapes, cleanup Prisma `beforeAll`/`afterAll`                |
+| `test/jest-e2e.json`               | Modifié - config Istanbul : `collectCoverage`, `collectCoverageFrom`, `coverageDirectory` |
+| `package.json`                     | Modifié - script `test:e2e:cov` ajouté                                                    |
+| `src/download/download.service.ts` | Modifié - `const { password } = dto ?? {}` (fix 500 body vide)                            |
+| `MAINTENANCE.md`                   | Créé - npm audit, inventaire dépendances, procédures patch/minor/major                    |
+| `TESTING.md`                       | Créé - stratégie 3 niveaux, résultats 12+45+12, coverage complète, critères               |
+| `coverage-e2e/`                    | Généré - rapport Istanbul lcov + HTML (gitignoré)                                         |
 
 ---
 
