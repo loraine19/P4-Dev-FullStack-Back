@@ -2,7 +2,7 @@
   "info": {
     "_postman_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
     "name": "P4 Backend - Full API",
-    "description": "Collection complète — auth, files, download, tags. Exécuter avec le backend démarré (npm run start:dev) et la BDD active (docker compose up -d).",
+    "description": "Collection complète -  auth, files, download, tags. Exécuter avec le backend démarré (npm run start:dev) et la BDD active (docker compose up -d).",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
@@ -39,8 +39,22 @@
           ],
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "url": { "raw": "{{baseUrl}}/auth/register", "host": ["{{baseUrl}}"], "path": ["auth", "register"] },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "register"
+              ]
+            },
             "body": {
               "mode": "raw",
               "raw": "{\n  \"email\": \"{{authEmail}}\",\n  \"password\": \"{{authPassword}}\",\n  \"name\": \"{{authName}}\"\n}"
@@ -68,8 +82,22 @@
           ],
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "url": { "raw": "{{baseUrl}}/auth/login", "host": ["{{baseUrl}}"], "path": ["auth", "login"] },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
             "body": {
               "mode": "raw",
               "raw": "{\n  \"email\": \"{{authEmail}}\",\n  \"password\": \"{{authPassword}}\",\n  \"isMobile\": true\n}"
@@ -104,13 +132,34 @@
           ],
           "request": {
             "method": "POST",
-            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
-            "url": { "raw": "{{baseUrl}}/files", "host": ["{{baseUrl}}"], "path": ["files"] },
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/files",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "files"
+              ]
+            },
             "body": {
               "mode": "formdata",
               "formdata": [
-                { "key": "file", "type": "file", "src": "postman/fixtures/test-upload.txt" },
-                { "key": "expirationDays", "value": "7", "type": "text" }
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": "postman/fixtures/test-upload.txt"
+                },
+                {
+                  "key": "expirationDays",
+                  "value": "7",
+                  "type": "text"
+                }
               ]
             }
           }
@@ -137,12 +186,29 @@
           "request": {
             "method": "POST",
             "header": [],
-            "url": { "raw": "{{baseUrl}}/files/anonymous", "host": ["{{baseUrl}}"], "path": ["files", "anonymous"] },
+            "url": {
+              "raw": "{{baseUrl}}/files/anonymous",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "files",
+                "anonymous"
+              ]
+            },
             "body": {
               "mode": "formdata",
               "formdata": [
-                { "key": "file", "type": "file", "src": "postman/fixtures/test-upload.txt" },
-                { "key": "expirationDays", "value": "3", "type": "text" }
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": "postman/fixtures/test-upload.txt"
+                },
+                {
+                  "key": "expirationDays",
+                  "value": "3",
+                  "type": "text"
+                }
               ]
             }
           }
@@ -167,8 +233,21 @@
           ],
           "request": {
             "method": "GET",
-            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
-            "url": { "raw": "{{baseUrl}}/files", "host": ["{{baseUrl}}"], "path": ["files"] }
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/files",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "files"
+              ]
+            }
           }
         },
         {
@@ -187,7 +266,15 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": { "raw": "{{baseUrl}}/files", "host": ["{{baseUrl}}"], "path": ["files"] }
+            "url": {
+              "raw": "{{baseUrl}}/files",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "files"
+              ]
+            }
           }
         }
       ]
@@ -220,8 +307,13 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/download/{{shareToken}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["download", "{{shareToken}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "download",
+                "{{shareToken}}"
+              ]
             }
           }
         },
@@ -243,8 +335,13 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/download/token-qui-nexiste-pas",
-              "host": ["{{baseUrl}}"],
-              "path": ["download", "token-qui-nexiste-pas"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "download",
+                "token-qui-nexiste-pas"
+              ]
             }
           }
         },
@@ -266,13 +363,26 @@
           ],
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "url": {
               "raw": "{{baseUrl}}/download/{{anonToken}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["download", "{{anonToken}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "download",
+                "{{anonToken}}"
+              ]
             },
-            "body": { "mode": "raw", "raw": "{}" }
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
           }
         }
       ]
@@ -312,10 +422,24 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
             ],
-            "url": { "raw": "{{baseUrl}}/tags", "host": ["{{baseUrl}}"], "path": ["tags"] },
+            "url": {
+              "raw": "{{baseUrl}}/tags",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tags"
+              ]
+            },
             "body": {
               "mode": "raw",
               "raw": "{\n  \"name\": \"{{tagName}}\"\n}"
@@ -338,10 +462,24 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
             ],
-            "url": { "raw": "{{baseUrl}}/tags", "host": ["{{baseUrl}}"], "path": ["tags"] },
+            "url": {
+              "raw": "{{baseUrl}}/tags",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tags"
+              ]
+            },
             "body": {
               "mode": "raw",
               "raw": "{\n  \"name\": \"{{tagName}}\"\n}"
@@ -369,8 +507,21 @@
           ],
           "request": {
             "method": "GET",
-            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
-            "url": { "raw": "{{baseUrl}}/tags", "host": ["{{baseUrl}}"], "path": ["tags"] }
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/tags",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tags"
+              ]
+            }
           }
         },
         {
@@ -389,7 +540,15 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": { "raw": "{{baseUrl}}/tags", "host": ["{{baseUrl}}"], "path": ["tags"] }
+            "url": {
+              "raw": "{{baseUrl}}/tags",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tags"
+              ]
+            }
           }
         },
         {
@@ -407,11 +566,21 @@
           ],
           "request": {
             "method": "DELETE",
-            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
             "url": {
               "raw": "{{baseUrl}}/tags/{{tagId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["tags", "{{tagId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tags",
+                "{{tagId}}"
+              ]
             }
           }
         }
@@ -435,8 +604,22 @@
           ],
           "request": {
             "method": "POST",
-            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
-            "url": { "raw": "{{baseUrl}}/auth/logout", "host": ["{{baseUrl}}"], "path": ["auth", "logout"] }
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/logout",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "logout"
+              ]
+            }
           }
         }
       ]
@@ -459,11 +642,21 @@
           ],
           "request": {
             "method": "DELETE",
-            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
             "url": {
               "raw": "{{baseUrl}}/files/{{fileId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["files", "{{fileId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "files",
+                "{{fileId}}"
+              ]
             }
           }
         }
