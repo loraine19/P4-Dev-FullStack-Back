@@ -1,4 +1,4 @@
-# **CHANGELOG - feat/api (back métier)**
+# CHANGELOG4 - feat/api (back métier) - back
 
 **Sprint step** : STEP 4 - Implémentation des modules métier (Files, Download, Tags)
 **Branche** : `feat/api` (depuis `feat/auth`)
@@ -7,7 +7,17 @@
 
 ---
 
-## **Ce qui est en place**
+[1. Ce qui est en place](#1-ce-qui-est-en-place)
+[2. Choix techniques](#2-choix-techniques)
+[a. Files - upload et suppression](#a-files---upload-et-suppression)
+[b. Download - token public + protection mot de passe](#b-download---token-public--protection-mot-de-passe)
+[c. Tags - CRUD utilisateur isolé](#c-tags---crud-utilisateur-isolé)
+[d. Modules NestJS](#d-modules-nestjs)
+[3. Résultats](#3-résultats)
+
+---
+
+## 1. Ce qui est en place
 
 | Module       | Endpoints implémentés                                                                                      |
 | :----------- | :--------------------------------------------------------------------------------------------------------- |
@@ -17,9 +27,9 @@
 
 ---
 
-## **Choix techniques**
+## 2. Choix techniques
 
-### **Files - upload et suppression**
+### a. Files - upload et suppression
 
 - Extension validée côté service contre un `Set` de 12 extensions interdites (exe, bat, cmd, com, msi, scr, ps1, sh, jar, app, dmg, vbs)
 - `filename` stocké en base = UUID + extension originale (généré par Multer `diskStorage` dans le controller)
@@ -31,20 +41,20 @@
 - Upload anonyme via `OptionalJwtAuthGuard` : `userId` null en base, aucun tag possible
 - Suppression : `fs.unlinkSync` du disque puis `prisma.file.delete` - erreur silencieuse si fichier absent du disque (déjà purgé par le cron)
 
-### **Download - token public + protection mot de passe**
+### b. Download - token public + protection mot de passe
 
 - `GET /:token` → métadonnées uniquement (`IDownloadMeta`) : pas de stream, pas de lien de téléchargement direct
 - `POST /:token` → stream via `StreamableFile` + `Content-Disposition: attachment` avec nom original encodé UTF-8
 - Lien expiré → `GoneException` (410) - distingué du 404 pour permettre un message front explicite
 - Mot de passe : vérification `bcrypt.compare` - même réponse 401 si absent ou invalide (pas de distinction pour éviter l'énumération)
 
-### **Tags - CRUD utilisateur isolé**
+### c. Tags - CRUD utilisateur isolé
 
 - `@@unique([name, userId])` en base - doublon → `ConflictException` (409)
 - `ForbiddenException` si tentative de suppression d'un tag appartenant à un autre user
 - Aucune exposition de `userId` dans `ITagResponse` → `{ id, name }` uniquement
 
-### **Modules NestJS**
+### d. Modules NestJS
 
 - `FilesModule` et `TagsModule` importent `AuthModule` (pour résoudre `JwtAuthGuard` / `OptionalJwtAuthGuard` + `JwtService` dans le DI)
 - `DownloadModule` importe seulement `LoggerModule` (aucun guard sur les routes download)
@@ -52,25 +62,7 @@
 
 ---
 
-## **Fichiers modifiés / créés**
-
-| Fichier                                         | Action                                                                         |
-| :---------------------------------------------- | :----------------------------------------------------------------------------- |
-| `src/common/constants/error-messages.ts`        | Modifié - ajout domains `FILES`, `DOWNLOAD`, `TAGS`                            |
-| `src/files/interfaces/multer-file.interface.ts` | Modifié - nettoyage (suppression import inutile et commentaires)               |
-| `src/files/files.module.ts`                     | Modifié - ajout imports `LoggerModule`, `AuthModule`, provider `PrismaService` |
-| `src/files/files.service.ts`                    | Implémenté - `upload()`, `findAll()`, `remove()`                               |
-| `src/files/files.controller.ts`                 | Implémenté - 4 routes, `diskStorage` Multer, guards                            |
-| `src/download/download.module.ts`               | Modifié - ajout imports `LoggerModule`, provider `PrismaService`               |
-| `src/download/download.service.ts`              | Implémenté - `getMeta()`, `download()`                                         |
-| `src/download/download.controller.ts`           | Implémenté - 2 routes (meta + stream)                                          |
-| `src/tags/tags.module.ts`                       | Modifié - ajout imports `LoggerModule`, `AuthModule`, provider `PrismaService` |
-| `src/tags/tags.service.ts`                      | Implémenté - `findAll()`, `create()`, `remove()`                               |
-| `src/tags/tags.controller.ts`                   | Implémenté - 3 routes CRUD                                                     |
-
----
-
-## **Build**
+## 3. Résultats
 
 ```bash
 npm run build  # 0 erreur TypeScript

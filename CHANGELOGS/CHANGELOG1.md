@@ -1,4 +1,4 @@
-# CHANGELOG - main (initial scaffold)
+# CHANGELOG1 - main - back
 
 **Sprint step** : STEP 2 - Initialisation des applications
 **Branche** : `main`
@@ -7,7 +7,17 @@
 
 ---
 
-## Ce qui est en place
+[1. Ce qui est en place](#1-ce-qui-est-en-place)
+[2. Choix techniques](#2-choix-techniques)
+[a. Prisma over TypeORM](#a-prisma-over-typeorm)
+[b. Modèle de données](#b-modèle-de-données)
+[c. Cron de nettoyage](#c-cron-de-nettoyage)
+[d. PrismaService](#d-prismaservice)
+[3. Variables d'environnement requises](#3-variables-denvironnement-requises)
+
+---
+
+## 1. Ce qui est en place
 
 | Thème              | Ce qui est opérationnel                                                     |
 | :----------------- | :-------------------------------------------------------------------------- |
@@ -19,13 +29,13 @@
 
 ---
 
-## Choix techniques
+## 2. Choix techniques
 
-### Prisma over TypeORM
+### a. Prisma over TypeORM
 
-Prisma 6 - typage généré depuis le schéma, migrations SQL versionnées, client fortement typé. Pas de TypeORM malgré la mention dans le SPRINT_PLAN - choix justifié par la maturité du tooling et la lisibilité du schéma `.prisma`.
+Prisma 6 - typage généré depuis le schéma, migrations SQL versionnées, client fortement typé. - choix justifié par la maturité du tooling et la lisibilité du schéma `.prisma`.
 
-### Modèle de données
+### b. Modèle de données
 
 4 tables : `User`, `File`, `Tag`, `FileTag` (PK composite `[fileId, tagId]`).
 
@@ -33,7 +43,7 @@ Prisma 6 - typage généré depuis le schéma, migrations SQL versionnées, clie
 - `Tag.userId` + `onDelete: Cascade` - les tags appartiennent à l'utilisateur
 - `@@unique([name, userId])` sur `Tag` - pas de doublon de tag par utilisateur
 
-### Cron de nettoyage
+### c. Cron de nettoyage
 
 `@Cron(CronExpression.EVERY_HOUR)` dans `CronTaskService` :
 
@@ -44,39 +54,13 @@ Prisma 6 - typage généré depuis le schéma, migrations SQL versionnées, clie
 
 Choix : suppression synchrone fichier par fichier (volume faible attendu) - pas de batch async pour simplifier la gestion d'erreur.
 
-### PrismaService
+### d. PrismaService
 
 `extends PrismaClient implements OnModuleInit` - connexion établie au démarrage du module, pas de singleton global.
 
 ---
 
-## Structure des fichiers notables
-
-```
-prisma/
-  schema.prisma                  -  modèles User / File / Tag / FileTag
-  migrations/20260509103448_init -  migration SQL initiale
-docker-compose.yml               -  PostgreSQL 16 + healthcheck
-src/
-  main.ts                        -  prefix api/v1 (ValidationPipe + auth câblés en feat/auth)
-  app.module.ts                  -  imports des modules (complets en feat/auth)
-  prisma/prisma.service.ts       -  extends PrismaClient, onModuleInit → $connect
-  cron-task/
-    cron-task.service.ts         -  @Cron EVERY_HOUR → nettoyage fichiers expirés
-  common/
-    guards/jwt-auth.guard.ts            -  squelette (implémenté en feat/auth)
-    guards/optional-jwt-auth.guard.ts   -  squelette
-    decorators/current-user.decorator.ts
-    filters/http-exception.filter.ts
-    filters/prisma-exception.filter.ts
-    middlewares/logger.middleware.ts
-    logger/logger.service.ts · logger.module.ts
-  auth/ files/ download/ tags/   -  squelettes module/controller/service/dto/interfaces
-```
-
----
-
-## Variables d'environnement requises
+## 3. Variables d'environnement requises
 
 ```env
 DATABASE_URL=

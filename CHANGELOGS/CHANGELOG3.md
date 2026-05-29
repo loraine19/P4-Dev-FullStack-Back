@@ -1,26 +1,36 @@
-# **CHANGELOG - feat/auth (tests)**
+# CHANGELOG3 - feat/auth (tests) - back
 
-**Sprint step** : STEP 3 - Tests unitaires \+ tests d'intégration **Branche** : `feat/auth`
+**Sprint step** : STEP 3 - Tests unitaires + tests d'intégration
+**Branche** : `feat/auth`
 
 **Objectif** : Couvrir la logique métier et la stack HTTP complète de l'authentification par des tests automatisés - unitaires (isolation totale) et intégration (vraie BDD Docker, vraie pile NestJS).
 
 ---
 
-## **Ce qui est en place**
+[1. Ce qui est en place](#1-ce-qui-est-en-place)
+[2. Choix techniques](#2-choix-techniques)
+[a. Tests unitaires - isolation totale](#a-tests-unitaires---isolation-totale)
+[b. Tests d'intégration - stack complète](#b-tests-dintégration---stack-complète)
+[c. Coverage - deux rapports complémentaires](#c-coverage---deux-rapports-complémentaires)
+[3. Résultats des tests](#3-résultats-des-tests)
+
+---
+
+## 1. Ce qui est en place
 
 | Thème                    | Ce qui est opérationnel                                                    |
 | :----------------------- | :------------------------------------------------------------------------- |
-| **Tests unitaires**      | 12 tests - `jwt-auth.guard.spec.ts` (6) \+ `auth.service.spec.ts` (6)      |
-| **Tests intégration**    | 9 tests - `test/auth.integration.spec.ts` (register \+ login \+ logout)    |
+| **Tests unitaires**      | 12 tests - `jwt-auth.guard.spec.ts` (6) + `auth.service.spec.ts` (6)       |
+| **Tests intégration**    | 9 tests - `test/auth.integration.spec.ts` (register + login + logout)      |
 | **Coverage unitaire**    | `npm run test:cov` → `coverage/lcov-report/index.html`                     |
 | **Coverage intégration** | `npm run test:integration` → `coverage-integration/lcov-report/index.html` |
 | **Documentation**        | `TEST_PLAN.md` - logique, CLI, scope de chaque suite                       |
 
 ---
 
-## **Choix techniques**
+## 2. Choix techniques
 
-### **Tests unitaires - isolation totale**
+### a. Tests unitaires - isolation totale
 
 Chaque test recrée ses dépendances via des factories (`makeGuard()`, `makeDeps()`, `makeRes()`) - pas de `beforeEach` partagé, isolation garantie.
 
@@ -28,18 +38,18 @@ Chaque test recrée ses dépendances via des factories (`makeGuard()`, `makeDeps
 - `jest.mock('bcrypt', factory)` - bcrypt compile en CJS, `jest.spyOn` ne peut pas redéfinir ses exports ; le mock module contourne ça
 - Pattern AAA (`/* Arrange */` / `/* Act */` / `/* Assert */`) dans chaque `it()`
 
-  ### **Tests intégration - stack complète**
+### b. Tests d'intégration - stack complète
 
 `Test.createTestingModule({ imports: [AppModule] })` bootstrappe la même app que `main.ts` :
 
-- `ValidationPipe` (whitelist \+ forbidNonWhitelisted) → DTOs vraiment validés
+- `ValidationPipe` (whitelist + forbidNonWhitelisted) → DTOs vraiment validés
 - `JwtAuthGuard` avec vrai JWT signé → logout 401 sans token testé réellement
-- `HttpExceptionFilter` \+ `PrismaExceptionFilter` → réponses d'erreur formatées testées en bout en bout
+- `HttpExceptionFilter` + `PrismaExceptionFilter` → réponses d'erreur formatées testées en bout en bout
 - Prisma → vraie BDD Docker PostgreSQL 16
 - `--runInBand` - séquentiel, même BDD partagée entre les tests
-- Isolation via email unique `integration-auth@test.local` \+ cleanup `beforeAll` / `afterAll`
+- Isolation via email unique `integration-auth@test.local` + cleanup `beforeAll` / `afterAll`
 
-  ### **Coverage - deux rapports complémentaires**
+### c. Coverage - deux rapports complémentaires
 
 | Suite           | Commande                 | Dossier rapport       | Ce qui est couvert                              |
 | :-------------- | :----------------------- | :-------------------- | :---------------------------------------------- |
@@ -50,14 +60,9 @@ Chaque test recrée ses dépendances via des factories (`makeGuard()`, `makeDeps
 
 ---
 
-## **Fichiers modifiés / créés**
+## 3. Résultats des tests
 
-| Fichier                                  | Action                                            |
-| :--------------------------------------- | :------------------------------------------------ |
-| src/common/guards/jwt-auth.guard.spec.ts | Créé - 6 tests unitaires                          |
-| src/auth/auth.service.spec.ts            | Créé - 6 tests unitaires                          |
-| test/auth.integration.spec.ts            | Créé - 9 tests intégration Supertest              |
-| test/jest-integration.json               | Créé - config Jest intégration avec coverage      |
-| tsconfig.json                            | Modifié - `types: ["jest", "node"]`               |
-| `package.json`                           | Modifié - script `test:integration` ajouté        |
-| `TEST_PLAN.md`                           | Créé - documentation complète des suites de tests |
+| Suite       | Tests | Statut |
+| :---------- | :---- | :----- |
+| Unitaire    | 12/12 | ✅     |
+| Intégration | 9/9   | ✅     |
