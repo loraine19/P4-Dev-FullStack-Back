@@ -14,8 +14,8 @@ import { CreateTagDto } from './dto/create-tag.dto';
 import type { ITagResponse } from './interfaces/tag-response.interface';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
-import type { IJwtPayload } from '../common/interfaces/jwt-payload.interface';
 import { ApiResponse, type IApiResponse } from '../common/helpers/api-response';
+import { SUCCESS_MESSAGES } from '../common/constants/success-messages';
 
 @Controller('tags')
 export class TagsController {
@@ -25,9 +25,9 @@ export class TagsController {
   @Get()
   @HttpCode(200)
   @UseGuards(JwtAuthGuard)
-  async findAll(@CurrentUser() user: IJwtPayload): Promise<IApiResponse<ITagResponse[]>> {
-    const data = await this.tagsService.findAll(user.sub);
-    return ApiResponse.success('Tags récupérés', data);
+  async findAll(@CurrentUser() userId: number): Promise<IApiResponse<ITagResponse[]>> {
+    const data = await this.tagsService.findAll(userId);
+    return ApiResponse.success(SUCCESS_MESSAGES.TAGS.LIST, data);
   }
 
   /* CREATE */
@@ -36,10 +36,10 @@ export class TagsController {
   @UseGuards(JwtAuthGuard)
   async create(
     @Body() dto: CreateTagDto,
-    @CurrentUser() user: IJwtPayload,
+    @CurrentUser() userId: number,
   ): Promise<IApiResponse<ITagResponse>> {
-    const data = await this.tagsService.create(dto, user.sub);
-    return ApiResponse.success('Tag créé', data);
+    const data = await this.tagsService.create(dto, userId);
+    return ApiResponse.success(SUCCESS_MESSAGES.TAGS.CREATED, data);
   }
 
   /* REMOVE */
@@ -48,8 +48,8 @@ export class TagsController {
   @UseGuards(JwtAuthGuard)
   async remove(
     @Param('id', ParseIntPipe) id: number,
-    @CurrentUser() user: IJwtPayload,
+    @CurrentUser() userId: number,
   ): Promise<void> {
-    await this.tagsService.remove(id, user.sub);
+    await this.tagsService.remove(id, userId);
   }
 }

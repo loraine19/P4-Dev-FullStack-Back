@@ -1,6 +1,5 @@
 import { ConflictException, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import type { Response } from 'express';
 import { AuthService } from './auth.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { LoggerService } from '../common/logger/logger.service';
@@ -20,6 +19,7 @@ const makeDeps = () => {
   const prisma = {
     user: {
       findUnique: jest.fn(),
+      findUniqueOrThrow: jest.fn(),
       create: jest.fn(),
     },
   } as unknown as PrismaService;
@@ -39,19 +39,10 @@ const makeDeps = () => {
   return { service, prisma, jwtService };
 };
 
-// makeRes: fake Express Response -- used to assert cookie/clearCookie are (or not) called
-const makeRes = () =>
-  ({
-    cookie: jest.fn(),
-    clearCookie: jest.fn(),
-  }) as unknown as Response;
-
-
-
 /* REGISTER */
 describe('AuthService.register()', () => {
-  /* 1.1 EMAIL LIBRE */
-  it('1.1 email libre -> bcrypt.hash + prisma.create called', async () => {
+  /* 1.1 FREE EMAIL */
+  it('1.1 free email -> bcrypt.hash + prisma.create called', async () => {
     /* Arrange */
     const { service, prisma } = makeDeps();
     (prisma.user.findUnique as jest.Mock).mockResolvedValue(null);  // no existing user in DB
@@ -67,7 +58,7 @@ describe('AuthService.register()', () => {
   });
 
   /* 1.2 EMAIL DEJA PRIS */
-  it('1.2 email deja pris -> ConflictException', async () => {
+  it('1.2 email taken -> ConflictException', async () => {
     /* Arrange */
     const { service, prisma } = makeDeps();
     (prisma.user.findUnique as jest.Mock).mockResolvedValue({ id: 1 });  // user already in DB
@@ -79,7 +70,6 @@ describe('AuthService.register()', () => {
 });
 
 /* LOGIN */
-/*mock*/
 describe('AuthService.login()', () => {
   const USER = {
     id: 1,
@@ -89,57 +79,50 @@ describe('AuthService.login()', () => {
   };
 
   /* 2.1 USER INCONNU */
-  it('2.1 user inconnu -> UnauthorizedException', async () => {
+  it('2.1 unknown user -> UnauthorizedException', async () => {
     /* Arrange */
     const { service, prisma } = makeDeps();
-    (prisma.user.findUnique as jest.Mock).mockResolvedValue(null);  // no user found
+    (prisma.user.findUnique as jest.Mock).mockResolvedValue(null);
     /* Act & Assert */
-    await expect(
-      service.login({ email: 'a@test.local', password: 'Password1' }, makeRes()),
-    ).rejects.toThrow(UnauthorizedException);
+    await expect(service.login({ email: 'a@test.local', password: 'Password1' })).rejects.toThrow(UnauthorizedException);
   });
 
-  /* 2.1 WRONG PASSWORD */
-  it('2.1 wrong password -> UnauthorizedException', async () => {
+  /* 2.2 WRONG PASSWORD */
+  it('2.2 wrong password -> UnauthorizedException', async () => {
     /* Arrange */
     const { service, prisma } = makeDeps();
     (prisma.user.findUnique as jest.Mock).mockResolvedValue(USER);
-    (bcrypt.compare as jest.Mock).mockResolvedValue(false);  // compare returns false -> wrong pw
+    (bcrypt.compare as jest.Mock).mockResolvedValue(false);
     /* Act & Assert */
-    await expect(
-      service.login({ email: 'a@test.local', password: 'wrong' }, makeRes()),
-    ).rejects.toThrow(UnauthorizedException);
+    await expect(service.login({ email: 'a@test.local', password: 'wrong' })).rejects.toThrow(UnauthorizedException);
   });
 
-  /* 2.2 SUCCESS WEB */
-  it('2.2 succes web -> res.cookie() called, no access_token in body', async () => {
+  /* 2.3 SUCCESS */
+  it('2.3 valid credentials -> returns user + raw token (no HTTP concern)', async () => {
     /* Arrange */
     const { service, prisma } = makeDeps();
     (prisma.user.findUnique as jest.Mock).mockResolvedValue(USER);
     (bcrypt.compare as jest.Mock).mockResolvedValue(true);
-    const res = makeRes();
     /* Act */
-    const result = await service.login({ email: 'a@test.local', password: 'Password1', isMobile: false }, res);
+    const result = await service.login({ email: 'a@test.local', password: 'Password1' });
     /* Assert */
-    // web: token set as httpOnly cookie, not exposed in body
-    expect(res.cookie).toHaveBeenCalled();
-    expect(result.access_token).toBeUndefined();
+    expect(result.token).toBe('signed-token');
     expect(result.user).toMatchObject({ id: 1, email: 'a@test.local', name: 'A' });
   });
+});
 
-  /* 2.3 SUCCES MOBILE */
-  it('2.3 succes mobile -> token in body, res.cookie() not called', async () => {
+/* ME */
+describe('AuthService.me()', () => {
+  const USER = { id: 1, email: 'a@test.local', name: 'A', passwordHash: 'h' };
+
+  it('3.1 valid userId → returns IUserPublic without passwordHash', async () => {
     /* Arrange */
     const { service, prisma } = makeDeps();
-    (prisma.user.findUnique as jest.Mock).mockResolvedValue(USER);
-    (bcrypt.compare as jest.Mock).mockResolvedValue(true);
-    const res = makeRes();
+    (prisma.user.findUniqueOrThrow as jest.Mock).mockResolvedValue(USER);
     /* Act */
-    const result = await service.login({ email: 'a@test.local', password: 'Password1', isMobile: true }, res);
+    const result = await service.me(1);
     /* Assert */
-    // mobile: token in body, no cookie set
-    expect(res.cookie).not.toHaveBeenCalled();
-    expect(result.access_token).toBe('signed-token');
-    expect(result.user).toMatchObject({ id: 1, email: 'a@test.local', name: 'A' });
+    expect(result).toEqual({ id: 1, email: 'a@test.local', name: 'A' });
+    expect(result).not.toHaveProperty('passwordHash');
   });
 });

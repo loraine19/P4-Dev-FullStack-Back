@@ -8,6 +8,7 @@ const makeDeps = () => ({
     register: jest.fn(),
     login:    jest.fn(),
     logout:   jest.fn(),
+    me:       jest.fn(),
   } as unknown as AuthService,
 });
 
@@ -30,11 +31,9 @@ describe('AuthController', () => {
     it('AC.1.1 calls authService.register and returns success envelope', async () => {
       /* Arrange */
       (authService.register as jest.Mock).mockResolvedValueOnce(undefined);
-      const dto = { name: 'Alice', email: 'alice@test.com', password: 'pw12345' } as any;
-
+      const dto = { name: 'Alice', email: 'alice@test.com', password: 'Password1' } as any;
       /* Act */
       const result = await controller.register(dto);
-
       /* Assert */
       expect(result).toEqual(ApiResponse.success('Compte créé avec succès'));
       expect(authService.register).toHaveBeenCalledWith(dto);
@@ -43,34 +42,57 @@ describe('AuthController', () => {
 
   /* AC.2 login() */
   describe('AC.2 login()', () => {
-    it('AC.2.1 calls authService.login and wraps result in success envelope', async () => {
-      /* Arrange */
-      const authData = { user: { id: 1, email: 'alice@test.com', name: 'Alice' }, access_token: null };
-      (authService.login as jest.Mock).mockResolvedValueOnce(authData);
-      const dto = { email: 'alice@test.com', password: 'pw12345' } as any;
+    const USER = { id: 1, email: 'alice@test.com', name: 'Alice' };
 
+    it('AC.2.1 web login -> cookie set, token not in body', async () => {
+      /* Arrange */
+      (authService.login as jest.Mock).mockResolvedValueOnce({ user: USER, token: 'tok' });
+      const dto = { email: 'alice@test.com', password: 'Password1', isMobile: false } as any;
       /* Act */
       const result = await controller.login(dto, mockRes);
-
       /* Assert */
-      expect(result).toEqual(ApiResponse.success('Connexion réussie', authData));
-      expect(authService.login).toHaveBeenCalledWith(dto, mockRes);
+      expect(mockRes.cookie).toHaveBeenCalled();
+      expect(result).toEqual(ApiResponse.success('Connexion réussie', { user: USER }));
+      expect(authService.login).toHaveBeenCalledWith(dto);
+    });
+
+    it('AC.2.2 mobile login -> token in body, no cookie', async () => {
+      /* Arrange */
+      (authService.login as jest.Mock).mockResolvedValueOnce({ user: USER, token: 'tok' });
+      const dto = { email: 'alice@test.com', password: 'Password1', isMobile: true } as any;
+      /* Act */
+      const result = await controller.login(dto, mockRes);
+      /* Assert */
+      expect(mockRes.cookie).not.toHaveBeenCalled();
+      expect(result).toEqual(ApiResponse.success('Connexion réussie', { user: USER, access_token: 'tok' }));
     });
   });
 
   /* AC.3 logout() */
   describe('AC.3 logout()', () => {
-    it('AC.3.1 calls authService.logout with user.sub and returns success envelope', async () => {
+    it('AC.3.1 calls authService.logout with userId, clears cookie, returns success envelope', async () => {
       /* Arrange */
       (authService.logout as jest.Mock).mockResolvedValueOnce(undefined);
-      const user = { sub: 1, email: 'alice@test.com' } as any;
-
       /* Act */
-      const result = await controller.logout(user, mockRes);
-
+      const result = await controller.logout(1, mockRes);
       /* Assert */
       expect(result).toEqual(ApiResponse.success('Déconnexion réussie'));
-      expect(authService.logout).toHaveBeenCalledWith(1, mockRes);
+      expect(authService.logout).toHaveBeenCalledWith(1);
+      expect(mockRes.clearCookie).toHaveBeenCalled();
+    });
+  });
+
+  /* AC.4 me() */
+  describe('AC.4 me()', () => {
+    it('AC.4.1 valid userId → envelope with IUserPublic', async () => {
+      /* Arrange */
+      const user = { id: 1, email: 'alice@test.com', name: 'Alice' };
+      (authService.me as jest.Mock).mockResolvedValueOnce(user);
+      /* Act */
+      const result = await controller.me(1);
+      /* Assert */
+      expect(authService.me).toHaveBeenCalledWith(1);
+      expect(result).toEqual(ApiResponse.success('Utilisateur authentifié', user));
     });
   });
 });

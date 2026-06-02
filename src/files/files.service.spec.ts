@@ -31,7 +31,7 @@ const makeDeps = () => {
   const logger = { log: jest.fn(), warn: jest.fn(), error: jest.fn() } as unknown as LoggerService;
 
   const tagsService = {
-    validateOwnership: jest.fn().mockResolvedValue(undefined),
+    attachToFile: jest.fn().mockResolvedValue(undefined),
   } as unknown as TagsService;
 
   const service = new FilesService(prisma, logger, tagsService);
@@ -65,7 +65,7 @@ const makeDbFile = (overrides = {}) => ({
 describe('FilesService', () => {
   /* ---------------------------------------------------------- UPLOAD */
   describe('upload()', () => {
-    it('C.1 fichier valide sans mot de passe → shareToken généré + prisma.create appelé', async () => {
+    it('C.1 valid file no password → shareToken + prisma.create', async () => {
       /* Arrange */
       const { service, prisma } = makeDeps();
       const dbFile = makeDbFile();
@@ -85,7 +85,7 @@ describe('FilesService', () => {
       expect(result.passwordProtected).toBe(false);
     });
 
-    it('C.2 fichier avec mot de passe → downloadPasswordHash calculé', async () => {
+    it('C.2 file with password → downloadPasswordHash set', async () => {
       /* Arrange */
       const { service, prisma } = makeDeps();
       const dbFile = makeDbFile({ downloadPasswordHash: 'hashed-password' });
@@ -102,7 +102,7 @@ describe('FilesService', () => {
       expect(result.passwordProtected).toBe(true);
     });
 
-    it('C.3 tags fournis → tagsService.validateOwnership appelé pour chaque tag', async () => {
+    it('C.3 tags provided → attachToFile in transaction', async () => {
       /* Arrange */
       const { service, prisma, tagsService } = makeDeps();
       const dbFile = makeDbFile();
@@ -116,14 +116,18 @@ describe('FilesService', () => {
       await service.upload(makeFile(), { expirationDays: 7, tags: [1, 2] }, 42);
 
       /* Assert */
-      expect(tagsService.validateOwnership).toHaveBeenCalledWith(1, 42);
-      expect(tagsService.validateOwnership).toHaveBeenCalledWith(2, 42);
+      expect(tagsService.attachToFile).toHaveBeenCalledWith({
+        fileId: dbFile.id,
+        tagIds: [1, 2],
+        userId: 42,
+        tx: prisma,
+      });
     });
   });
 
   /* ---------------------------------------------------------- FIND ALL */
   describe('findAll()', () => {
-    it('C.4 userId valide → retourne tableau de fichiers', async () => {
+    it('C.4 valid userId → returns file array', async () => {
       /* Arrange */
       const { service, prisma } = makeDeps();
       (prisma.file.findMany as jest.Mock).mockResolvedValue([makeDbFile(), makeDbFile({ id: 2, originalName: 'other.txt' })]);
@@ -139,7 +143,7 @@ describe('FilesService', () => {
 
   /* ---------------------------------------------------------- REMOVE */
   describe('remove()', () => {
-    it('C.5 propriétaire du fichier → fs.unlinkSync + prisma.delete appelés', async () => {
+    it('C.5 file owner → fs.unlinkSync + prisma.delete', async () => {
       /* Arrange */
       const { service, prisma } = makeDeps();
       (prisma.file.findUnique as jest.Mock).mockResolvedValue(makeDbFile());
@@ -153,7 +157,7 @@ describe('FilesService', () => {
       expect(prisma.file.delete).toHaveBeenCalledWith({ where: { id: 1 } });
     });
 
-    it('C.6 fichier inexistant → NotFoundException', async () => {
+    it('C.6 missing file → NotFoundException', async () => {
       /* Arrange */
       const { service, prisma } = makeDeps();
       (prisma.file.findUnique as jest.Mock).mockResolvedValue(null);
@@ -162,7 +166,7 @@ describe('FilesService', () => {
       await expect(service.remove(99, 42)).rejects.toThrow(NotFoundException);
     });
 
-    it('C.7 autre utilisateur → ForbiddenException', async () => {
+    it('C.7 other user → ForbiddenException', async () => {
       /* Arrange */
       const { service, prisma } = makeDeps();
       (prisma.file.findUnique as jest.Mock).mockResolvedValue(makeDbFile({ userId: 99 }));

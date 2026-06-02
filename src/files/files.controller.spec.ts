@@ -20,7 +20,7 @@ const makeDeps = () => ({
   } as unknown as FilesService,
 });
 
-const MOCK_USER = { sub: 1, email: 'alice@test.com' } as any;
+const MOCK_USER_ID = 1;
 
 describe('FilesController', () => {
   let controller: FilesController;
@@ -44,11 +44,11 @@ describe('FilesController', () => {
       const dto        = { expirationDays: '7' } as any;
 
       /* Act */
-      const result = await controller.upload(multerFile, dto, MOCK_USER);
+      const result = await controller.upload(multerFile, dto, MOCK_USER_ID);
 
       /* Assert */
       expect(result).toEqual(ApiResponse.success('Fichier uploadé', fileItem));
-      expect(filesService.upload).toHaveBeenCalledWith(multerFile, dto, MOCK_USER.sub);
+      expect(filesService.upload).toHaveBeenCalledWith(multerFile, dto, MOCK_USER_ID);
     });
   });
 
@@ -72,10 +72,8 @@ describe('FilesController', () => {
       /* Arrange */
       const fileItem = makeFileItem();
       (filesService.upload as jest.Mock).mockResolvedValueOnce(fileItem);
-      const user = { sub: 2, email: 'bob@test.com' } as any;
-
       /* Act */
-      await controller.uploadAnonymous({ originalname: 'file.pdf' } as any, {} as any, user);
+      await controller.uploadAnonymous({ originalname: 'file.pdf' } as any, {} as any, 2);
 
       /* Assert */
       expect(filesService.upload).toHaveBeenCalledWith(expect.anything(), {}, 2);
@@ -90,11 +88,11 @@ describe('FilesController', () => {
       (filesService.findAll as jest.Mock).mockResolvedValueOnce(files);
 
       /* Act */
-      const result = await controller.findAll(MOCK_USER);
+      const result = await controller.findAll(MOCK_USER_ID);
 
       /* Assert */
       expect(result).toEqual(ApiResponse.success('Fichiers récupérés', files));
-      expect(filesService.findAll).toHaveBeenCalledWith(MOCK_USER.sub);
+      expect(filesService.findAll).toHaveBeenCalledWith(MOCK_USER_ID);
     });
   });
 
@@ -105,10 +103,10 @@ describe('FilesController', () => {
       (filesService.remove as jest.Mock).mockResolvedValueOnce(undefined);
 
       /* Act */
-      await controller.remove(1, MOCK_USER);
+      await controller.remove(1, MOCK_USER_ID);
 
       /* Assert */
-      expect(filesService.remove).toHaveBeenCalledWith(1, MOCK_USER.sub);
+      expect(filesService.remove).toHaveBeenCalledWith(1, MOCK_USER_ID);
     });
   });
 });

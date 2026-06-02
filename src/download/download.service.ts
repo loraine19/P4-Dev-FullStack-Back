@@ -10,13 +10,14 @@ import { ERROR_MESSAGES } from '../common/constants/error-messages';
 import { DownloadDto } from './dto/download.dto';
 import type { IDownloadMeta } from './interfaces/download-meta.interface';
 import { StreamableFile } from '@nestjs/common';
-import * as bcrypt from 'bcrypt';
 import * as fs from 'fs';
 import * as path from 'path';
+import { UPLOADS_DIR } from '../common/constants/paths';
+import { comparePassword } from '../common/helpers/hash';
 
 @Injectable()
 export class DownloadService {
-  private readonly uploadsDir = path.join(process.cwd(), 'uploads');
+  private readonly uploadsDir = UPLOADS_DIR;
 
   constructor(
     private readonly prisma: PrismaService,
@@ -25,7 +26,7 @@ export class DownloadService {
 
   /* GET META */
   async getMeta(shareToken: string): Promise<IDownloadMeta> {
-    const file = await this.prisma.file.findUnique({ where: { shareToken } });
+    const file  = await this.prisma.file.findUnique({ where: { shareToken } });
     if (!file) throw new NotFoundException(ERROR_MESSAGES.DOWNLOAD.NOT_FOUND);
     if (file.expiresAt < new Date()) throw new GoneException(ERROR_MESSAGES.DOWNLOAD.EXPIRED);
     return {
@@ -47,7 +48,7 @@ export class DownloadService {
 
     if (file.downloadPasswordHash) {
       if (!password) throw new UnauthorizedException(ERROR_MESSAGES.DOWNLOAD.BAD_PASSWORD);
-      const valid = await bcrypt.compare(password, file.downloadPasswordHash);
+      const valid = await comparePassword(password, file.downloadPasswordHash);
       if (!valid) throw new UnauthorizedException(ERROR_MESSAGES.DOWNLOAD.BAD_PASSWORD);
     }
 

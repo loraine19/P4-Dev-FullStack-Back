@@ -5,8 +5,9 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { Request } from 'express';
-import { IJwtPayload } from '../interfaces/jwt-payload.interface';
+import type { IJwtPayload } from '../interfaces/jwt-payload.interface';
+import type { IRequestWithUser } from '../interfaces/request-with-user.interface';
+import { JWT_SECRET, COOKIE_NAME } from '../constants/security';
 
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
@@ -14,14 +15,12 @@ export class JwtAuthGuard implements CanActivate {
 
   /* CAN ACTIVATE */
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const request = context.switchToHttp().getRequest<Request>();
+    const request = context.switchToHttp().getRequest<IRequestWithUser>();
     const token = this.extractToken(request);
     if (!token) throw new UnauthorizedException();
     try {
-      const payload = await this.jwtService.verifyAsync<IJwtPayload>(
-        token,
-        {secret: process.env.JWT_SECRET });
-      request['user'] = payload;
+      const payload = await this.jwtService.verifyAsync<IJwtPayload>(token, { secret: JWT_SECRET });
+      request.user = payload;
       return true;
     } catch {
       throw new UnauthorizedException();
@@ -30,9 +29,9 @@ export class JwtAuthGuard implements CanActivate {
 
   /* HELPER METHODS */
   /* EXTRACT TOKEN */
-  protected extractToken(request: Request): string | null {
-    const cookieName = process.env.ACCESS_COOKIE_NAME ?? 'access_token';
-    const fromCookie = request.cookies?.[cookieName] as string | undefined;
+  protected extractToken(request: IRequestWithUser): string | null {
+    
+    const fromCookie = request.cookies?.[COOKIE_NAME] as string | undefined;
     if (fromCookie) return fromCookie;
     const auth = request.headers.authorization;
     if (!auth) return null;

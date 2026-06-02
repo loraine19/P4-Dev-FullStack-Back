@@ -100,7 +100,7 @@ describe('Files routes (integration)', () => {
   /* 1 POST /files */
   describe(`POST /${PREFIX}/files`, () => {
     /* 1.1 VALID FILE */
-    it('1.1 fichier valide + auth -> 201 + shareToken', async () => {
+    it('1.1 valid file + auth -> 201 + shareToken', async () => {
       const res = await request(app.getHttpServer())
         .post(`/${PREFIX}/files`)
         .set('Cookie', cookie)
@@ -115,7 +115,7 @@ describe('Files routes (integration)', () => {
     });
 
     /* 1.2 NO AUTH */
-    it('1.2 sans authentification -> 401', async () => {
+    it('1.2 no auth -> 401', async () => {
       const res = await request(app.getHttpServer())
         .post(`/${PREFIX}/files`)
         .attach('file', Buffer.from('hello'), { filename: 'test.txt', contentType: 'text/plain' });
@@ -123,7 +123,7 @@ describe('Files routes (integration)', () => {
     });
 
     /* 1.3 FORBIDDEN EXTENSION */
-    it('1.3 extension interdite (.exe) -> 400', async () => {
+    it('1.3 forbidden extension (.exe) -> 400', async () => {
       const res = await request(app.getHttpServer())
         .post(`/${PREFIX}/files`)
         .set('Cookie', cookie)
@@ -132,7 +132,7 @@ describe('Files routes (integration)', () => {
     });
 
     /* 1.4 WITH PASSWORD */
-    it('1.4 upload avec mot de passe -> 201 + passwordProtected = true', async () => {
+    it('1.4 upload with password -> 201 + passwordProtected = true', async () => {
       const res = await request(app.getHttpServer())
         .post(`/${PREFIX}/files`)
         .set('Cookie', cookie)
@@ -148,7 +148,7 @@ describe('Files routes (integration)', () => {
   /* 2 POST /files/anonymous */
   describe(`POST /${PREFIX}/files/anonymous`, () => {
     /* 2.1 VALID WITHOUT AUTH */
-    it('2.1 fichier valide sans token -> 201 + shareToken', async () => {
+    it('2.1 valid file no token -> 201 + shareToken', async () => {
       const res = await request(app.getHttpServer())
         .post(`/${PREFIX}/files/anonymous`)
         .attach('file', Buffer.from('anonymous file'), { filename: 'anon.txt', contentType: 'text/plain' })
@@ -163,7 +163,7 @@ describe('Files routes (integration)', () => {
   /* 3 GET /files */
   describe(`GET /${PREFIX}/files`, () => {
     /* 3.1 AUTHENTICATED */
-    it('3.1 utilisateur connecté -> 200 + tableau avec propriétés', async () => {
+    it('3.1 authenticated user -> 200 + array with properties', async () => {
       const res = await request(app.getHttpServer())
         .get(`/${PREFIX}/files`)
         .set('Cookie', cookie);
@@ -177,8 +177,8 @@ describe('Files routes (integration)', () => {
       expect(res.body.data[0]).toHaveProperty('tags');
     });
 
-    /* 3.2 ISOLATION -  userB ne voit pas les fichiers de userA */
-    it('3.2 isolation : userB ne voit pas les fichiers de userA', async () => {
+    /* 3.2 ISOLATION - userB cannot see userA files */
+    it('3.2 isolation: userB cannot see userA files', async () => {
       const resA = await request(app.getHttpServer()).get(`/${PREFIX}/files`).set('Cookie', cookie);
       const resB = await request(app.getHttpServer()).get(`/${PREFIX}/files`).set('Cookie', cookieB);
       const idsA = resA.body.data.map((f: { id: number }) => f.id);
@@ -187,7 +187,7 @@ describe('Files routes (integration)', () => {
     });
 
     /* 3.3 NO AUTH */
-    it('3.3 sans authentification -> 401', async () => {
+    it('3.3 no auth -> 401', async () => {
       const res = await request(app.getHttpServer()).get(`/${PREFIX}/files`);
       expect(res.status).toBe(401);
     });
@@ -196,7 +196,7 @@ describe('Files routes (integration)', () => {
   /* 4 DELETE /files/:id */
   describe(`DELETE /${PREFIX}/files/:id`, () => {
     /* 4.1 OTHER USER */
-    it('4.1 autre utilisateur -> 403', async () => {
+    it('4.1 other user -> 403', async () => {
       const res = await request(app.getHttpServer())
         .delete(`/${PREFIX}/files/${uploadedFileId}`)
         .set('Cookie', cookieB);
@@ -204,7 +204,7 @@ describe('Files routes (integration)', () => {
     });
 
     /* 4.2 NOT FOUND */
-    it('4.2 fichier inexistant -> 404', async () => {
+    it('4.2 missing file -> 404', async () => {
       const res = await request(app.getHttpServer())
         .delete(`/${PREFIX}/files/999999`)
         .set('Cookie', cookie);
@@ -212,13 +212,13 @@ describe('Files routes (integration)', () => {
     });
 
     /* 4.3 NO AUTH */
-    it('4.3 sans authentification -> 401', async () => {
+    it('4.3 no auth -> 401', async () => {
       const res = await request(app.getHttpServer()).delete(`/${PREFIX}/files/${uploadedFileId}`);
       expect(res.status).toBe(401);
     });
 
     /* 4.4 OWNER */
-    it('4.4 propriétaire -> 204', async () => {
+    it('4.4 owner -> 204', async () => {
       const res = await request(app.getHttpServer())
         .delete(`/${PREFIX}/files/${uploadedFileId}`)
         .set('Cookie', cookie);
@@ -226,9 +226,9 @@ describe('Files routes (integration)', () => {
     });
   });
 
-  /* 5 E2E -  FLUX UPLOAD + HISTORIQUE + SUPPRESSION */
+  /* 5 E2E - upload + list + delete */
   describe('E2E: login → upload → GET /files → DELETE', () => {
-    it('5.1 flux complet upload + historique + suppression', async () => {
+    it('5.1 full flow upload + list + delete', async () => {
       /* upload */
       const upload = await request(app.getHttpServer())
         .post(`/${PREFIX}/files`)
@@ -238,18 +238,18 @@ describe('Files routes (integration)', () => {
       expect(upload.status).toBe(201);
       const fileId: number = upload.body.data.id;
 
-      /* liste -  fichier présent */
+      /* list - file present */
       const list = await request(app.getHttpServer()).get(`/${PREFIX}/files`).set('Cookie', cookie);
       expect(list.status).toBe(200);
       expect(list.body.data.some((f: { id: number }) => f.id === fileId)).toBe(true);
 
-      /* suppression */
+      /* delete */
       const del = await request(app.getHttpServer())
         .delete(`/${PREFIX}/files/${fileId}`)
         .set('Cookie', cookie);
       expect(del.status).toBe(204);
 
-      /* liste -  fichier absent */
+      /* list - file absent */
       const list2 = await request(app.getHttpServer()).get(`/${PREFIX}/files`).set('Cookie', cookie);
       expect(list2.body.data.some((f: { id: number }) => f.id === fileId)).toBe(false);
     });

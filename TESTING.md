@@ -8,7 +8,7 @@
 
 [2\. Tests unitaires \- Jest](#2.-tests-unitaires---jest)
 
-[A. 16 suites \- 69/69 ✅](#16-suites---69/69-✅)
+[A. 16 suites \- 75/75 ✅](#16-suites---75/75-✅)
 
 [b. Commandes](#b.-commandes)
 
@@ -63,27 +63,27 @@
 
 # 2\. Tests unitaires \- Jest {#2.-tests-unitaires---jest}
 
-1. ## 16 suites \- 69/69 ✅ {#16-suites---69/69-✅}
+1. ## 16 suites \- 75/75 ✅ {#16-suites---75/75-✅}
 
 | Suite                           | Module         | Classe testée         | Tests  |
 | :------------------------------ | :------------- | :-------------------- | :----: |
 | jwt-auth.guard.spec.ts          | common/guards  | JwtAuthGuard          |   6    |
 | optional-jwt-auth.guard.spec.ts | common/guards  | OptionalJwtAuthGuard  |   2    |
-| auth.service.spec.ts            | auth           | AuthService           |   6    |
-| auth.controller.spec.ts         | auth           | AuthController        |   3    |
+| auth.service.spec.ts            | auth           | AuthService           |   7    |
+| auth.controller.spec.ts         | auth           | AuthController        |   4    |
 | error.filter.spec.ts            | common/filters | ErrorFilter           |   2    |
 | http-exception.filter.spec.ts   | common/filters | HttpExceptionFilter   |   3    |
 | multer-exception.filter.spec.ts | common/filters | MulterExceptionFilter |   2    |
 | prisma-exception.filter.spec.ts | common/filters | PrismaExceptionFilter |   4    |
 | api-response.spec.ts            | common/helpers | ApiResponse           |   4    |
-| cron-task.service.spec.ts       | cron-task      | CronTaskService       |   3    |
+| cron-task.service.spec.ts       | cron-task      | CronTaskService       |   7    |
 | download.service.spec.ts        | download       | DownloadService       |   8    |
 | download.controller.spec.ts     | download       | DownloadController    |   3    |
 | files.service.spec.ts           | files          | FilesService          |   7    |
 | files.controller.spec.ts        | files          | FilesController       |   5    |
 | tags.service.spec.ts            | tags           | TagsService           |   8    |
 | tags.controller.spec.ts         | tags           | TagsController        |   3    |
-| **Total**                       |                |                       | **69** |
+| **Total**                       |                |                       | **75** |
 
 ## b. Commandes {#b.-commandes}
 
@@ -102,7 +102,7 @@ L'API NestJS est montée in-process via `Test.createTestingModule()`. La BDD Pos
 | :--------------------------- | :------------------------------------------------------ | :----: |
 | auth.integration.spec.ts     | POST /auth/register · /auth/login · /auth/logout        |   9    |
 | files.integration.spec.ts    | POST /files · GET /files · DELETE /files/:id            |   13   |
-| download.integration.spec.ts | GET /download/meta/:token · GET /download/stream/:token |   11   |
+| download.integration.spec.ts | GET /download/:token · POST /download/:token            |   11   |
 | tags.integration.spec.ts     | POST /tags · GET /tags · DELETE /tags/:id               |   12   |
 | **Total**                    |                                                         | **45** |
 
@@ -130,8 +130,8 @@ Scénario complet enchaîné dans un seul processus Jest.
 | 6         | Téléchargement stream → `content-disposition: attachment` |     200      |      ✅      |
 | 7         | Création de tag                                           |     201      |      ✅      |
 | 8         | Liste des tags → tag présent                              |     200      |      ✅      |
-| 9         | Suppression de tag                                        |     204      |      ✅      |
-| 10        | Suppression de fichier                                    |     204      |      ✅      |
+| 9         | Suppression de tag                                        |     200      |      ✅      |
+| 10        | Suppression de fichier                                    |     200      |      ✅      |
 | 11        | Déconnexion (cookie effacé)                               |     200      |      ✅      |
 | 12        | Accès sans cookie → non autorisé                          |     401      |      ✅      |
 | **Total** |                                                           |              | **✅ 12/12** |
@@ -213,7 +213,7 @@ Rapport HTML : `coverage-e2e/lcov-report/index.html`
 
 | Critère                            |       Seuil        |  Résultat   |
 | :--------------------------------- | :----------------: | :---------: |
-| Tests unitaires                    |     100% pass      |  ✅ 69/69   |
+| Tests unitaires                    |     100% pass      |  ✅ 75/75   |
 | Tests d'intégration                |     100% pass      |  ✅ 45/45   |
 | Tests parcours API                 |     100% pass      |  ✅ 12/12   |
 | Tests E2E Cypress                  |     100% pass      |  ✅ 26/26   |

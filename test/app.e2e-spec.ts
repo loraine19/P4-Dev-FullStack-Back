@@ -70,7 +70,7 @@ describe('Full user journey (e2e)', () => {
       .expect(200);
 
     expect(res.headers['set-cookie']).toBeDefined();
-    cookie = res.headers['set-cookie'] as string[];
+    cookie = (res.headers['set-cookie'] as unknown) as string[];
   });
 
   /* STEP 3 -  UPLOAD */

@@ -89,7 +89,7 @@ describe('Auth routes (integration)', () => {
   describe(`POST /${PREFIX}/auth/login`, () => {
    
     /* 2.1 SUCCES WEB */
-    it('2.1 succes web -> 200, Set-Cookie present, no access_token in body', async () => {
+    it('2.1 web success -> 200, Set-Cookie present, no access_token in body', async () => {
       /* Act */
       const res = await request(app.getHttpServer())
         .post(`/${PREFIX}/auth/login`)
@@ -103,7 +103,7 @@ describe('Auth routes (integration)', () => {
     });
 
     /* 2.2 SUCCES MOBILE */
-    it('2.2 succes mobile -> 200, access_token in body, no cookie', async () => {
+    it('2.2 mobile success -> 200, access_token in body, no cookie', async () => {
       /* Act */
       const res = await request(app.getHttpServer())
         .post(`/${PREFIX}/auth/login`)

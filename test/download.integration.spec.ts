@@ -55,7 +55,7 @@ describe('Download routes (integration)', () => {
       .send({ email: TEST_EMAIL, password: TEST_PASSWORD, isMobile: false });
     cookie = login.headers['set-cookie'] as unknown as string[];
 
-    /* upload fichier libre */
+    /* upload free file */
     const free = await request(app.getHttpServer())
       .post(`/${PREFIX}/files`)
       .set('Cookie', cookie)
@@ -63,7 +63,7 @@ describe('Download routes (integration)', () => {
       .field('expirationDays', '7');
     shareTokenFree = free.body.data.shareToken;
 
-    /* upload fichier protégé */
+    /* upload protected file */
     const prot = await request(app.getHttpServer())
       .post(`/${PREFIX}/files`)
       .set('Cookie', cookie)
@@ -72,7 +72,7 @@ describe('Download routes (integration)', () => {
       .field('downloadPassword', FILE_PASSWORD);
     shareTokenProtected = prot.body.data.shareToken;
 
-    /* insérer directement un fichier expiré en DB (pas besoin du fichier sur disque) */
+    /* insert expired file in DB (disk file not required) */
     const expiredFakeFilename = `expired-${crypto.randomUUID()}.txt`;
     shareTokenExpired = crypto.randomUUID();
     await prisma.file.create({
@@ -110,9 +110,9 @@ describe('Download routes (integration)', () => {
     await app.close();
   });
 
-  /* 1 GET /download/:token -  MÉTADONNÉES */
+  /* 1 GET /download/:token - metadata */
   describe(`GET /${PREFIX}/download/:token`, () => {
-    it('1.1 token valide (sans mot de passe) -> 200 + meta complète', async () => {
+    it('1.1 valid token (no password) -> 200 + full meta', async () => {
       const res = await request(app.getHttpServer()).get(`/${PREFIX}/download/${shareTokenFree}`);
       expect(res.status).toBe(200);
       expect(res.body.data).toHaveProperty('filename');
@@ -122,26 +122,26 @@ describe('Download routes (integration)', () => {
       expect(res.body.data.requiresPassword).toBe(false);
     });
 
-    it('1.2 token valide (protégé) -> requiresPassword = true', async () => {
+    it('1.2 valid token (protected) -> requiresPassword = true', async () => {
       const res = await request(app.getHttpServer()).get(`/${PREFIX}/download/${shareTokenProtected}`);
       expect(res.status).toBe(200);
       expect(res.body.data.requiresPassword).toBe(true);
     });
 
-    it('1.3 token expiré -> 410', async () => {
+    it('1.3 expired token -> 410', async () => {
       const res = await request(app.getHttpServer()).get(`/${PREFIX}/download/${shareTokenExpired}`);
       expect(res.status).toBe(410);
     });
 
-    it('1.4 token inconnu -> 404', async () => {
+    it('1.4 unknown token -> 404', async () => {
       const res = await request(app.getHttpServer()).get(`/${PREFIX}/download/token-qui-nexiste-pas`);
       expect(res.status).toBe(404);
     });
   });
 
-  /* 2 POST /download/:token -  TÉLÉCHARGEMENT */
+  /* 2 POST /download/:token - download */
   describe(`POST /${PREFIX}/download/:token`, () => {
-    it('2.1 fichier sans mot de passe -> 200 + content-disposition', async () => {
+    it('2.1 file without password -> 200 + content-disposition', async () => {
       const res = await request(app.getHttpServer())
         .post(`/${PREFIX}/download/${shareTokenFree}`)
         .send({});
@@ -149,21 +149,21 @@ describe('Download routes (integration)', () => {
       expect(res.headers['content-disposition']).toBeDefined();
     });
 
-    it('2.2 bon mot de passe -> 200 stream', async () => {
+    it('2.2 correct password -> 200 stream', async () => {
       const res = await request(app.getHttpServer())
         .post(`/${PREFIX}/download/${shareTokenProtected}`)
         .send({ password: FILE_PASSWORD });
       expect(res.status).toBe(200);
     });
 
-    it('2.3 mauvais mot de passe -> 401', async () => {
+    it('2.3 wrong password -> 401', async () => {
       const res = await request(app.getHttpServer())
         .post(`/${PREFIX}/download/${shareTokenProtected}`)
         .send({ password: 'wrongpassword' });
       expect(res.status).toBe(401);
     });
 
-    it('2.4 token expiré -> 410', async () => {
+    it('2.4 expired token -> 410', async () => {
       const res = await request(app.getHttpServer())
         .post(`/${PREFIX}/download/${shareTokenExpired}`)
         .send({});
@@ -171,9 +171,9 @@ describe('Download routes (integration)', () => {
     });
   });
 
-  /* 3 E2E -  FLUX DOWNLOAD COMPLETS */
+  /* 3 E2E - full download flows */
   describe('E2E: upload → getMeta → download', () => {
-    it('3.1 flux download libre (upload anonyme)', async () => {
+    it('3.1 free download flow (anonymous upload)', async () => {
       const upload = await request(app.getHttpServer())
         .post(`/${PREFIX}/files/anonymous`)
         .attach('file', Buffer.from('e2e download content'), { filename: 'e2e-dl.txt', contentType: 'text/plain' })
@@ -192,7 +192,7 @@ describe('Download routes (integration)', () => {
       expect(dl.status).toBe(200);
     });
 
-    it('3.2 flux download protégé -  bon mot de passe', async () => {
+    it('3.2 protected download flow - correct password', async () => {
       const upload = await request(app.getHttpServer())
         .post(`/${PREFIX}/files`)
         .set('Cookie', cookie)
@@ -208,7 +208,7 @@ describe('Download routes (integration)', () => {
       expect(dl.status).toBe(200);
     });
 
-    it('3.3 flux download protégé -  mauvais mot de passe -> 401', async () => {
+    it('3.3 protected download flow - wrong password -> 401', async () => {
       const upload = await request(app.getHttpServer())
         .post(`/${PREFIX}/files`)
         .set('Cookie', cookie)

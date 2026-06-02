@@ -43,7 +43,7 @@ const makeDbFile = (overrides = {}) => ({
 describe('DownloadService', () => {
   /* ---------------------------------------------------------- GET META */
   describe('getMeta()', () => {
-    it('D.1 token valide → retourne métadonnées + requiresPassword false', async () => {
+    it('D.1 valid token → metadata + requiresPassword false', async () => {
       /* Arrange */
       const { service, prisma } = makeDeps();
       (prisma.file.findUnique as jest.Mock).mockResolvedValue(makeDbFile());
@@ -56,7 +56,7 @@ describe('DownloadService', () => {
       expect(result.requiresPassword).toBe(false);
     });
 
-    it('D.2 token valide protégé → requiresPassword true', async () => {
+    it('D.2 valid protected token → requiresPassword true', async () => {
       /* Arrange */
       const { service, prisma } = makeDeps();
       (prisma.file.findUnique as jest.Mock).mockResolvedValue(
@@ -70,7 +70,7 @@ describe('DownloadService', () => {
       expect(result.requiresPassword).toBe(true);
     });
 
-    it('D.3 token inconnu → NotFoundException', async () => {
+    it('D.3 unknown token → NotFoundException', async () => {
       /* Arrange */
       const { service, prisma } = makeDeps();
       (prisma.file.findUnique as jest.Mock).mockResolvedValue(null);
@@ -79,7 +79,7 @@ describe('DownloadService', () => {
       await expect(service.getMeta('bad-token')).rejects.toThrow(NotFoundException);
     });
 
-    it('D.4 token expiré → GoneException', async () => {
+    it('D.4 expired token → GoneException', async () => {
       /* Arrange */
       const { service, prisma } = makeDeps();
       (prisma.file.findUnique as jest.Mock).mockResolvedValue(
@@ -93,7 +93,7 @@ describe('DownloadService', () => {
 
   /* ---------------------------------------------------------- DOWNLOAD */
   describe('download()', () => {
-    it('D.5 fichier sans mot de passe → retourne StreamableFile', async () => {
+    it('D.5 file without password → returns StreamableFile', async () => {
       /* Arrange */
       const { service, prisma } = makeDeps();
       (prisma.file.findUnique as jest.Mock).mockResolvedValue(makeDbFile());
@@ -105,7 +105,7 @@ describe('DownloadService', () => {
       expect(result).toBeInstanceOf(StreamableFile);
     });
 
-    it('D.6 bon mot de passe → retourne StreamableFile', async () => {
+    it('D.6 correct password → returns StreamableFile', async () => {
       /* Arrange */
       const { service, prisma } = makeDeps();
       (prisma.file.findUnique as jest.Mock).mockResolvedValue(
@@ -120,7 +120,7 @@ describe('DownloadService', () => {
       expect(result).toBeInstanceOf(StreamableFile);
     });
 
-    it('D.7 mauvais mot de passe → UnauthorizedException', async () => {
+    it('D.7 wrong password → UnauthorizedException', async () => {
       /* Arrange */
       const { service, prisma } = makeDeps();
       (prisma.file.findUnique as jest.Mock).mockResolvedValue(
@@ -134,7 +134,7 @@ describe('DownloadService', () => {
       );
     });
 
-    it('D.8 token expiré → GoneException', async () => {
+    it('D.8 expired token → GoneException', async () => {
       /* Arrange */
       const { service, prisma } = makeDeps();
       (prisma.file.findUnique as jest.Mock).mockResolvedValue(

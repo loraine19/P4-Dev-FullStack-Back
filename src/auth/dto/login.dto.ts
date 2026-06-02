@@ -5,13 +5,14 @@ import {
   IsString,
   MinLength,
 } from 'class-validator';
+import { PASSWORD_MIN_LENGTH } from '../../common/constants/security';
 
 export class LoginDto {
   @IsEmail()
   email: string;
 
   @IsString()
-  @MinLength(6)
+  @MinLength(PASSWORD_MIN_LENGTH)
   password: string;
 
   @IsBoolean()

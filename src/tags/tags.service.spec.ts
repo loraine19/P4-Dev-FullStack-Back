@@ -4,6 +4,7 @@ import {
   ForbiddenException,
   NotFoundException,
 } from '@nestjs/common';
+import type { Prisma } from '@prisma/client';
 import { TagsService } from './tags.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { LoggerService } from '../common/logger/logger.service';
@@ -35,7 +36,7 @@ const makeDbTag = (overrides = {}) => ({
 describe('TagsService', () => {
   /* ---------------------------------------------------------- FIND ALL */
   describe('findAll()', () => {
-    it('E.1 userId valide → retourne tableau de tags', async () => {
+    it('E.1 valid userId → returns tag array', async () => {
       /* Arrange */
       const { service, prisma } = makeDeps();
       (prisma.tag.findMany as jest.Mock).mockResolvedValue([makeDbTag(), makeDbTag({ id: 2, name: 'node' })]);
@@ -51,7 +52,7 @@ describe('TagsService', () => {
 
   /* ---------------------------------------------------------- CREATE */
   describe('create()', () => {
-    it('E.2 nom libre → tag créé + retourné', async () => {
+    it('E.2 free name → tag created and returned', async () => {
       /* Arrange */
       const { service, prisma } = makeDeps();
       (prisma.tag.findFirst as jest.Mock).mockResolvedValue(null);
@@ -65,7 +66,7 @@ describe('TagsService', () => {
       expect(result).toEqual({ id: 1, name: 'react' });
     });
 
-    it('E.3 doublon même utilisateur → ConflictException', async () => {
+    it('E.3 duplicate same user → ConflictException', async () => {
       /* Arrange */
       const { service, prisma } = makeDeps();
       (prisma.tag.findFirst as jest.Mock).mockResolvedValue(makeDbTag());
@@ -77,7 +78,7 @@ describe('TagsService', () => {
 
   /* ---------------------------------------------------------- REMOVE */
   describe('remove()', () => {
-    it('E.4 propriétaire du tag → prisma.delete appelé', async () => {
+    it('E.4 tag owner → prisma.delete called', async () => {
       /* Arrange */
       const { service, prisma } = makeDeps();
       (prisma.tag.findUnique as jest.Mock).mockResolvedValue(makeDbTag());
@@ -90,7 +91,7 @@ describe('TagsService', () => {
       expect(prisma.tag.delete).toHaveBeenCalledWith({ where: { id: 1 } });
     });
 
-    it('E.5 tag inexistant → NotFoundException', async () => {
+    it('E.5 missing tag → NotFoundException', async () => {
       /* Arrange */
       const { service, prisma } = makeDeps();
       (prisma.tag.findUnique as jest.Mock).mockResolvedValue(null);
@@ -99,7 +100,7 @@ describe('TagsService', () => {
       await expect(service.remove(99, 42)).rejects.toThrow(NotFoundException);
     });
 
-    it('E.6 autre utilisateur → ForbiddenException', async () => {
+    it('E.6 other user → ForbiddenException', async () => {
       /* Arrange */
       const { service, prisma } = makeDeps();
       (prisma.tag.findUnique as jest.Mock).mockResolvedValue(makeDbTag({ userId: 99 }));
@@ -109,24 +110,45 @@ describe('TagsService', () => {
     });
   });
 
-  /* ---------------------------------------------------------- VALIDATE OWNERSHIP */
-  describe('validateOwnership()', () => {
-    it('E.7 tag appartient à userId → ne lève pas d\'exception', async () => {
-      /* Arrange */
-      const { service, prisma } = makeDeps();
-      (prisma.tag.findFirst as jest.Mock).mockResolvedValue(makeDbTag());
+  /* ---------------------------------------------------------- ATTACH TO FILE */
+  describe('attachToFile()', () => {
+    const makeTx = (overrides = {}) => ({
+      tag: { findMany: jest.fn().mockResolvedValue([]) },
+      fileTag: { createMany: jest.fn().mockResolvedValue({}) },
+      ...overrides,
+    }) as unknown as Prisma.TransactionClient;
 
-      /* Act & Assert */
-      await expect(service.validateOwnership(1, 42)).resolves.toBeUndefined();
+    it('E.9 all valid tags → fileTag.createMany with skipDuplicates', async () => {
+      /* Arrange */
+      const { service } = makeDeps();
+      const tx = makeTx({
+        tag: { findMany: jest.fn().mockResolvedValue([{ id: 10, userId: 42 }, { id: 20, userId: 42 }]) },
+      });
+
+      /* Act */
+      await service.attachToFile({ fileId: 1, tagIds: [10, 20], userId: 42, tx });
+
+      /* Assert */
+      expect(tx.fileTag.createMany).toHaveBeenCalledWith({
+        data: [{ fileId: 1, tagId: 10 }, { fileId: 1, tagId: 20 }],
+        skipDuplicates: true,
+      });
     });
 
-    it('E.8 tag n\'appartient pas à userId → BadRequestException', async () => {
+    it('E.10 missing tag or other user → BadRequestException, no createMany', async () => {
       /* Arrange */
-      const { service, prisma } = makeDeps();
-      (prisma.tag.findFirst as jest.Mock).mockResolvedValue(null);
+      const { service } = makeDeps();
+      // findMany returns only 1 tag whereas 2 were requested → length mismatch
+      const tx = makeTx({
+        tag: { findMany: jest.fn().mockResolvedValue([{ id: 10, userId: 42 }]) },
+      });
 
       /* Act & Assert */
-      await expect(service.validateOwnership(1, 42)).rejects.toThrow(BadRequestException);
+      await expect(
+        service.attachToFile({ fileId: 1, tagIds: [10, 20], userId: 42, tx }),
+      ).rejects.toThrow(BadRequestException);
+      expect(tx.fileTag.createMany).not.toHaveBeenCalled();
     });
   });
+
 });

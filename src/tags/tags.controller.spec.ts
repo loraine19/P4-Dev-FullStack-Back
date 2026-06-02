@@ -11,7 +11,7 @@ const makeDeps = () => ({
   } as unknown as TagsService,
 });
 
-const MOCK_USER = { sub: 1, email: 'alice@test.com' } as any;
+const MOCK_USER_ID = 1;
 
 describe('TagsController', () => {
   let controller: TagsController;
@@ -33,11 +33,11 @@ describe('TagsController', () => {
       (tagsService.findAll as jest.Mock).mockResolvedValueOnce(tags);
 
       /* Act */
-      const result = await controller.findAll(MOCK_USER);
+      const result = await controller.findAll(MOCK_USER_ID);
 
       /* Assert */
       expect(result).toEqual(ApiResponse.success('Tags récupérés', tags));
-      expect(tagsService.findAll).toHaveBeenCalledWith(MOCK_USER.sub);
+      expect(tagsService.findAll).toHaveBeenCalledWith(MOCK_USER_ID);
     });
   });
 
@@ -50,11 +50,11 @@ describe('TagsController', () => {
       const dto = { name: 'typescript' } as any;
 
       /* Act */
-      const result = await controller.create(dto, MOCK_USER);
+      const result = await controller.create(dto, MOCK_USER_ID);
 
       /* Assert */
       expect(result).toEqual(ApiResponse.success('Tag créé', tag));
-      expect(tagsService.create).toHaveBeenCalledWith(dto, MOCK_USER.sub);
+      expect(tagsService.create).toHaveBeenCalledWith(dto, MOCK_USER_ID);
     });
   });
 
@@ -65,10 +65,10 @@ describe('TagsController', () => {
       (tagsService.remove as jest.Mock).mockResolvedValueOnce(undefined);
 
       /* Act */
-      await controller.remove(1, MOCK_USER);
+      await controller.remove(1, MOCK_USER_ID);
 
       /* Assert */
-      expect(tagsService.remove).toHaveBeenCalledWith(1, MOCK_USER.sub);
+      expect(tagsService.remove).toHaveBeenCalledWith(1, MOCK_USER_ID);
     });
   });
 });

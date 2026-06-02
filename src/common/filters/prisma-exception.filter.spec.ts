@@ -60,7 +60,7 @@ describe('PrismaExceptionFilter', () => {
   });
 
   /* PF.1.3 P2000 → 400 Bad Request */
-  it('PF.1.3 P2000 input value too long → 400 Bad Request', () => {
+  it('PF.1.3 P2000 input value too long → 400 Bad Request + generic message', () => {
     /* Arrange */
     const exception = makePrismaError('P2000', 'Input value too long', { cause: 'field name' });
     const { host, status, json } = makeMockHost();
@@ -70,9 +70,8 @@ describe('PrismaExceptionFilter', () => {
 
     /* Assert */
     expect(status).toHaveBeenCalledWith(HttpStatus.BAD_REQUEST);
-    // meta.cause used for detail
     expect(json).toHaveBeenCalledWith(
-      expect.objectContaining({ message: expect.stringContaining('P2000') }),
+      expect.objectContaining({ message: ERROR_MESSAGES.COMMON.BAD_REQUEST }),
     );
   });
 

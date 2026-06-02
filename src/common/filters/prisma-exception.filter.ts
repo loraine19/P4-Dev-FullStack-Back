@@ -37,7 +37,7 @@ export class PrismaExceptionFilter implements ExceptionFilter {
     const detail =
       (prismaError.meta?.cause as string | undefined) ?? prismaError.message;
     let status: HttpStatus;
-    let responseMessage = `PRISMA ${prismaError.code}: ${detail}`;
+    let responseMessage: string;
 
     switch (prismaError.code) {
       case 'P2002':
@@ -45,10 +45,12 @@ export class PrismaExceptionFilter implements ExceptionFilter {
       case 'P2004':
       case 'P1014':
         status = HttpStatus.CONFLICT;
+        responseMessage = ERROR_MESSAGES.COMMON.CONFLICT;
         break;
       case 'P2001':
       case 'P2025':
         status = HttpStatus.NOT_FOUND;
+        responseMessage = ERROR_MESSAGES.COMMON.NOT_FOUND;
         break;
       case 'P2000':
       case 'P2006':
@@ -60,6 +62,7 @@ export class PrismaExceptionFilter implements ExceptionFilter {
       case 'P2021':
       case 'P2036':
         status = HttpStatus.BAD_REQUEST;
+        responseMessage = ERROR_MESSAGES.COMMON.BAD_REQUEST;
         break;
       default:
         status = HttpStatus.INTERNAL_SERVER_ERROR;

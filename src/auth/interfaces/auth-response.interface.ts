@@ -1,9 +1,4 @@
-/* IUSER PUBLIC */
-export interface IUserPublic {
-  id: number;
-  email: string;
-  name: string;
-}
+import type { IUserPublic } from './user-public.interface';
 
 /* IAUTH RESPONSE */
 export interface IAuthResponse {

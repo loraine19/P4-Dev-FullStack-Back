@@ -6,13 +6,14 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma/prisma.service';
 import { LoggerService } from '../common/logger/logger.service';
-import type { Response } from 'express';
-import * as bcrypt from 'bcrypt';
 import { ERROR_MESSAGES } from '../common/constants/error-messages';
+import { hashPassword, comparePassword } from '../common/helpers/hash';
+import { JWT_SECRET, JWT_EXPIRES_IN } from '../common/constants/security';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
-import { IAuthResponse, IUserPublic } from './interfaces/auth-response.interface';
+import type { IUserPublic } from './interfaces/user-public.interface';
 import type { StringValue } from 'ms';
+
 
 @Injectable()
 export class AuthService {
@@ -23,33 +24,8 @@ export class AuthService {
   ) {}
 
   /* GENERATE TOKEN */
-  private async generateToken(sub: number): Promise<string> {
-    const expiresIn = (process.env.JWT_EXPIRES_IN ?? '7d') as StringValue;
-    return this.jwtService.signAsync(
-      { sub },
-      {
-        secret: process.env.JWT_SECRET,
-        expiresIn,
-      },
-    );
-  }
-
-  /* SET AUTH COOKIE */
-  private setAuthCookie(res: Response, token: string): void {
-    const cookieName = process.env.ACCESS_COOKIE_NAME ?? 'access_token';
-    const maxAge = parseInt(process.env.COOKIE_MAX_AGE ?? '604800000');
-    res.cookie(cookieName, token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
-      maxAge,
-    });
-  }
-
-  /* CLEAR AUTH COOKIE */
-  private clearAuthCookie(res: Response): void {
-    const cookieName = process.env.ACCESS_COOKIE_NAME ?? 'access_token';
-    res.clearCookie(cookieName);
+  private generateToken(sub: number): Promise<string> {
+    return this.jwtService.signAsync({ sub }, { secret: JWT_SECRET, expiresIn: JWT_EXPIRES_IN as StringValue });
   }
 
   /* TO USER PUBLIC */
@@ -66,30 +42,32 @@ export class AuthService {
     const { email, password, name } = dto;
     const exists = await this.prisma.user.findUnique({ where: { email } });
     if (exists) throw new ConflictException(ERROR_MESSAGES.AUTH.EMAIL_ALREADY_USED);
-    const passwordHash = await bcrypt.hash(password, 10);
+    const passwordHash = await hashPassword(password);
     await this.prisma.user.create({ data: { email, passwordHash, name } });
   }
 
   /* LOGIN */
-  async login(dto: LoginDto, res: Response): Promise<IAuthResponse> {
-    const { email, password, isMobile } = dto;
+  // returns token so the controller can decide where to place it (cookie vs body)
+  async login(dto: LoginDto): Promise<{ user: IUserPublic; token: string }> {
+    const { email, password } = dto;
     const user = await this.prisma.user.findUnique({ where: { email } });
     if (!user) throw new UnauthorizedException(ERROR_MESSAGES.AUTH.INVALID_CREDENTIALS);
-    const valid = await bcrypt.compare(password, user.passwordHash);
+    const valid = await comparePassword(password, user.passwordHash);
     if (!valid) throw new UnauthorizedException(ERROR_MESSAGES.AUTH.INVALID_CREDENTIALS);
     const token = await this.generateToken(user.id);
-    const userPublic = this.toUserPublic(user);
-    if (isMobile) {
-      this.logger.warn('Mobile login -  token returned in body', AuthService.name);
-      return { user: userPublic, access_token: token };
-    } else this.setAuthCookie(res, token);
-    return { user: userPublic };
+    return { user: this.toUserPublic(user), token };
+  }
+
+  /* ME */
+  async me(userId: number): Promise<IUserPublic> {
+    const user = await this.prisma.user.findUniqueOrThrow({ where: { id: userId } });
+    return this.toUserPublic(user);
   }
 
   /* LOGOUT */
-  async logout(userId: number, res: Response): Promise<void> {
-    // guard already verified the token -  findUniqueOrThrow ensures user still exists
+  async logout(userId: number): Promise<void> {
+    
     await this.prisma.user.findUniqueOrThrow({ where: { id: userId } });
-    this.clearAuthCookie(res);
+    
   }
 }

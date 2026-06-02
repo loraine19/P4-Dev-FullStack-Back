@@ -18,32 +18,30 @@ import * as path from 'path';
 import * as crypto from 'crypto';
 import { FilesService } from './files.service';
 import { UploadFileDto } from './dto/upload-file.dto';
-import type { MulterFile } from './interfaces/multer-file.interface';
+import type { MulterFile } from './interfaces/multer-file.types';
 import type { IFileResponse } from './interfaces/file-response.interface';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { OptionalJwtAuthGuard } from '../common/guards/optional-jwt-auth.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
-import type { IJwtPayload } from '../common/interfaces/jwt-payload.interface';
 import { ApiResponse, type IApiResponse } from '../common/helpers/api-response';
-
-
-const FORBIDDEN_EXTENSIONS = new Set([
-  'exe', 'bat', 'cmd', 'com', 'msi', 'scr', 'ps1', 'sh', 'jar', 'app', 'dmg', 'vbs',
-]);
+import { SUCCESS_MESSAGES } from '../common/constants/success-messages';
+import { ERROR_MESSAGES } from '../common/constants/error-messages';
+import { FORBIDDEN_EXTENSIONS, MAX_FILE_SIZE } from '../common/constants/upload';
+import { UPLOADS_DIR } from '../common/constants/paths';
 
 const multerOptions = {
   storage: diskStorage({
-    destination: './uploads',
+    destination: UPLOADS_DIR,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     filename: (_req: any, file: Express.Multer.File, cb: (error: Error | null, filename: string) => void) =>
       cb(null, `${crypto.randomUUID()}${path.extname(file.originalname)}`),
   }),
-  limits: { fileSize: 1024 * 1024 * 1024 }, // 1 Go (US01)
+  limits: { fileSize: MAX_FILE_SIZE },
   // validates extension before multer writes to disk
   fileFilter: (_req: Express.Request, file: Express.Multer.File, cb: (error: Error | null, accept: boolean) => void) => {
     const ext = path.extname(file.originalname).slice(1).toLowerCase();
     if (!ext || FORBIDDEN_EXTENSIONS.has(ext))
-      return cb(new BadRequestException('Extension de fichier non autorisée'), false);
+      return cb(new BadRequestException(ERROR_MESSAGES.FILES.INVALID_EXTENSION), false);
     cb(null, true);
   },
 };
@@ -60,10 +58,10 @@ export class FilesController {
   async upload(
     @UploadedFile() file: MulterFile,
     @Body() dto: UploadFileDto,
-    @CurrentUser() user: IJwtPayload,
+    @CurrentUser() userId: number,
   ): Promise<IApiResponse<IFileResponse>> {
-    const data = await this.filesService.upload(file, dto, user.sub);
-    return ApiResponse.success('Fichier uploadé', data);
+    const data = await this.filesService.upload(file, dto, userId);
+    return ApiResponse.success(SUCCESS_MESSAGES.FILES.UPLOADED, data);
   }
 
   /* UPLOAD ANONYMOUS */
@@ -74,19 +72,19 @@ export class FilesController {
   async uploadAnonymous(
     @UploadedFile() file: MulterFile,
     @Body() dto: UploadFileDto,
-    @CurrentUser() user: IJwtPayload | null,
+    @CurrentUser() userId: number | null,
   ): Promise<IApiResponse<IFileResponse>> {
-    const data = await this.filesService.upload(file, dto, user?.sub);
-    return ApiResponse.success('Fichier uploadé', data);
+    const data = await this.filesService.upload(file, dto, userId ?? undefined);
+    return ApiResponse.success(SUCCESS_MESSAGES.FILES.UPLOADED, data);
   }
 
   /* FIND ALL */
   @Get()
   @HttpCode(200)
   @UseGuards(JwtAuthGuard)
-  async findAll(@CurrentUser() user: IJwtPayload): Promise<IApiResponse<IFileResponse[]>> {
-    const data = await this.filesService.findAll(user.sub);
-    return ApiResponse.success('Fichiers récupérés', data);
+  async findAll(@CurrentUser() userId: number): Promise<IApiResponse<IFileResponse[]>> {
+    const data = await this.filesService.findAll(userId);
+    return ApiResponse.success(SUCCESS_MESSAGES.FILES.LIST, data);
   }
 
   /* REMOVE */
@@ -95,8 +93,8 @@ export class FilesController {
   @UseGuards(JwtAuthGuard)
   async remove(
     @Param('id', ParseIntPipe) id: number,
-    @CurrentUser() user: IJwtPayload,
+    @CurrentUser() userId: number,
   ): Promise<void> {
-    await this.filesService.remove(id, user.sub);
+    await this.filesService.remove(id, userId);
   }
 }

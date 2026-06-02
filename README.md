@@ -17,7 +17,7 @@ Le destinataire peut :
 - **Accéder aux métadonnées** du fichier via le `shareToken` (sans compte)
 - **Télécharger le fichier** (avec saisie du mot de passe si protégé)
 
-Les fichiers expirés sont **automatiquement supprimés** (disque + base) par une tâche planifiée toutes les heures.
+Les fichiers expirés sont **automatiquement supprimés** (disque + base) par une tâche planifiée quotidiennement à 2h du matin.
 
 ## Stack technique
 
@@ -41,7 +41,10 @@ src/
 │   └── prisma.service.ts
 ├── common/
 │   ├── constants/
-│   │   └── error-messages.ts
+│   │   ├── error-messages.ts
+│   │   ├── success-messages.ts
+│   │   ├── security.ts           ← PASSWORD_MIN_LENGTH · FILE_PASSWORD_MIN_LENGTH · BCRYPT_ROUNDS
+│   │   └── upload.ts             ← MAX_FILE_SIZE · FORBIDDEN_EXTENSIONS
 │   ├── decorators/
 │   │   └── current-user.decorator.ts
 │   ├── filters/
@@ -109,6 +112,11 @@ JWT_EXPIRES_IN="7d"
 FRONTEND_URL=http://localhost:5173
 ACCESS_COOKIE_NAME=access_token
 COOKIE_MAX_AGE=604800000
+
+# Validation passwords (optionnel — valeurs par défaut appliquées si absentes)
+PASSWORD_MIN_LENGTH=8
+FILE_PASSWORD_MIN_LENGTH=6
+BCRYPT_SALT_ROUNDS=10
 ```
 
 ## Lancement

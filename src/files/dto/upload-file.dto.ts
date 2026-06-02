@@ -1,5 +1,6 @@
 import { IsArray, IsInt, IsOptional, IsString, Max, Min, MinLength } from 'class-validator';
 import { Transform } from 'class-transformer';
+import { FILE_PASSWORD_MIN_LENGTH } from '../../common/constants/security';
 
 export class UploadFileDto {
   @IsOptional()
@@ -11,7 +12,7 @@ export class UploadFileDto {
 
   @IsOptional()
   @IsString()
-  @MinLength(6) // US09
+  @MinLength(FILE_PASSWORD_MIN_LENGTH)
   downloadPassword?: string;
 
   @IsOptional()

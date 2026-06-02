@@ -10,6 +10,7 @@ import { LoggerService } from '../common/logger/logger.service';
 import { ERROR_MESSAGES } from '../common/constants/error-messages';
 import { CreateTagDto } from './dto/create-tag.dto';
 import type { ITagResponse } from './interfaces/tag-response.interface';
+import type { IAttachToFileParams } from './interfaces/attach-to-file-params.interface';
 
 @Injectable()
 export class TagsService {
@@ -24,10 +25,15 @@ export class TagsService {
     return tags.map(({ id, name }) => ({ id, name }));
   }
 
-  /* VALIDATE OWNERSHIP */
-  async validateOwnership(tagId: number, userId: number): Promise<void> {
-    const tag = await this.prisma.tag.findFirst({ where: { id: tagId, userId } });
-    if (!tag) throw new BadRequestException(ERROR_MESSAGES.TAGS.NOT_FOUND);
+  /* ATTACH TO FILE */
+  async attachToFile({ fileId, tagIds, userId, tx }: IAttachToFileParams): Promise<void> {
+    const uniqueTagIds = [...new Set(tagIds)];
+    const validTags = await tx.tag.findMany({ where: { id: { in: uniqueTagIds }, userId } });
+    if (validTags.length !== uniqueTagIds.length) throw new BadRequestException(ERROR_MESSAGES.TAGS.NOT_FOUND);
+    await tx.fileTag.createMany({
+      data: uniqueTagIds.map((tagId) => ({ fileId, tagId })),
+      skipDuplicates: true,
+    });
   }
 
   /* CREATE */

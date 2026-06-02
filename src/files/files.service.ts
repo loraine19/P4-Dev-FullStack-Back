@@ -8,16 +8,18 @@ import { LoggerService } from '../common/logger/logger.service';
 import { ERROR_MESSAGES } from '../common/constants/error-messages';
 import { UploadFileDto } from './dto/upload-file.dto';
 import type { IFileResponse } from './interfaces/file-response.interface';
-import type { MulterFile } from './interfaces/multer-file.interface';
+import type { MulterFile } from './interfaces/multer-file.types';
 import { TagsService } from '../tags/tags.service';
-import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
 import * as fs from 'fs';
 import * as path from 'path';
+import { UPLOADS_DIR } from '../common/constants/paths';
+import { DEFAULT_EXPIRATION_DAYS } from '../common/constants/upload';
+import { hashPassword } from '../common/helpers/hash';
 
 @Injectable()
 export class FilesService {
-  private readonly uploadsDir = path.join(process.cwd(), 'uploads');
+  private readonly uploadsDir = UPLOADS_DIR;
 
   constructor(
     private readonly prisma: PrismaService,
@@ -52,8 +54,7 @@ export class FilesService {
     };
   }
 
-  /* UPLOAD */
-  /* RESOLVE ORIGINAL NAME HELPER */
+  /* RESOLVE ORIGINAL NAME */
   private async resolveOriginalName(rawName: string, userId?: number): Promise<string> {
     const ext = path.extname(rawName);
     const base = path.basename(rawName, ext);
@@ -80,22 +81,13 @@ export class FilesService {
     return rawName;
   }
 
+  /* UPLOAD */
   async upload(file: MulterFile, dto: UploadFileDto, userId?: number): Promise<IFileResponse> {
     const { expirationDays, downloadPassword, tags } = dto;
-
-    if (tags?.length && userId !== undefined) {
-      for (const tagId of tags) {
-        await this.tagsService.validateOwnership(tagId, userId);
-      }
-    }
-
     const shareToken = crypto.randomUUID();
-    const downloadPasswordHash = downloadPassword
-      ? await bcrypt.hash(downloadPassword, 10)
-      : null;
-    const expiresAt = new Date(Date.now() + (expirationDays ?? 7) * 86_400_000);
+    const downloadPasswordHash = downloadPassword ? await hashPassword(downloadPassword) : null;
+    const expiresAt = new Date(Date.now() + (expirationDays ?? DEFAULT_EXPIRATION_DAYS) * 86_400_000);
     const originalName = await this.resolveOriginalName(file.originalname, userId);
-
     const created = await this.prisma.$transaction(async (tx) => {
       const newFile = await tx.file.create({
         data: {
@@ -110,10 +102,8 @@ export class FilesService {
         },
       });
 
-      if (tags?.length) {
-        await tx.fileTag.createMany({
-          data: tags.map((tagId) => ({ fileId: newFile.id, tagId })),
-        });
+      if (tags?.length && userId != null) {
+        await this.tagsService.attachToFile({ fileId: newFile.id, tagIds: tags, userId, tx });
       }
 
       return newFile;
