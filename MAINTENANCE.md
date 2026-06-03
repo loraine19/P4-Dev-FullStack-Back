@@ -1,136 +1,92 @@
-# **MAINTENANCE.md**
+# MAINTENANCE.md
 
-## **DataShare Backend**
-
-[1\. Procédure d'audit de sécurité](#1.-procédure-d'audit-de-sécurité)
-
-[a. Commande](#commande)
-
-[b. Résultat actuel (25/05/2026)](<#résultat-actuel-(25/05/2026)>)
-
-[c. Traitement](#traitement)
-
-[2\. Inventaire des dépendances critiques](#2.-inventaire-des-dépendances-critiques)
-
-[a. Production (dependencies)](<#production-(dependencies)>)
-
-[b. Dev uniquement (devDependencies \- pas d'impact production)](<#dev-uniquement-(devdependencies---pas-d'impact-production)>)
-
-[3\. Fréquence de mise à jour recommandée](#3.-fréquence-de-mise-à-jour-recommandée)
-
-[4\. Procédure de mise à jour standard](#4.-procédure-de-mise-à-jour-standard)
-
-[a. Vérifier l'état avant mise à jour](#vérifier-l'état-avant-mise-à-jour)
-
-[b. Mettre à jour (patch/minor)](<#mettre-à-jour-(patch/minor)>)
-
-[c. Vérifier qu'aucune régression n'est introduite](#vérifier-qu'aucune-régression-n'est-introduite)
-
-[d. Vérifier la compilation TypeScript](#vérifier-la-compilation-typescript)
-
-[e. Vérifier l'audit après mise à jour](#vérifier-l'audit-après-mise-à-jour)
-
-[5\. Procédures spécifiques par package](#5.-procédures-spécifiques-par-package)
-
-[a. bcrypt \- hachage mots de passe](#bcrypt---hachage-mots-de-passe)
-
-[b. prisma \+ @prisma/client](#prisma-+-@prisma/client)
-
-[c. @nestjs/jwt](#@nestjs/jwt)
-
-[d. newman-reporter-htmlextra](#newman-reporter-htmlextra)
-
-[6\. Surveillance en production](#6.-surveillance-en-production)
+## DataShare Backend
 
 ---
 
-#
+# 1. Procédure d'audit de sécurité
 
-# 1\. Procédure d'audit de sécurité {#1.-procédure-d'audit-de-sécurité}
-
-1. ## Commande {#commande}
+## 1. Commande
 
 - npm audit
 
-2. ## Résultat actuel (25/05/2026) {#résultat-actuel-(25/05/2026)}
+## 2. Résultat actuel (25/05/2026)
 
-19 vulnérabilités \- 1 critique, 10 high, 8 moderate
+19 vulnérabilités - 1 critique, 10 high, 8 moderate
 
 Packages affectés : flatted ≤3.4.1, handlebars 4.0.0–4.7.8, jose 3.0.0–4.15.4, lodash ≤4.17.23
 
 **Origine** :  
- toutes dans `newman-reporter-htmlextra` (devDependency \- outil de rapport de tests Postman).  
+ toutes dans `newman-reporter-htmlextra` (devDependency - outil de rapport de tests Postman).  
 **Le code production (`dependencies`) ne présente aucune vulnérabilité.**
 
-3. ## Traitement {#traitement}
+## 3. Traitement
 
 | Contexte                                        | Action                                                            |
 | :---------------------------------------------- | :---------------------------------------------------------------- |
-| Vulnérabilité dans `dependencies` (production)  | Corriger immédiatement \- `npm audit fix` ou mise à jour manuelle |
-| Vulnérabilité dans `devDependencies` uniquement | Évaluer l'impact réel \- pas d'exposition en production           |
-| Fix avec breaking change (`--force`)            | Tester avant d'appliquer \- vérifier la suite d'intégration       |
+| Vulnérabilité dans `dependencies` (production)  | Corriger immédiatement - `npm audit fix` ou mise à jour manuelle |
+| Vulnérabilité dans `devDependencies` uniquement | Évaluer l'impact réel - pas d'exposition en production           |
+| Fix avec breaking change (`--force`)            | Tester avant d'appliquer - vérifier la suite d'intégration       |
 
 ---
 
-#
+# 2. Inventaire des dépendances critiques
 
-# 2\. Inventaire des dépendances critiques {#2.-inventaire-des-dépendances-critiques}
-
-1. ## Production (`dependencies`) {#production-(dependencies)}
+## 1. Production (`dependencies`)
 
 | Package                                  | Version          | Rôle                                        | Risque mise à jour                                                               |
 | :--------------------------------------- | :--------------- | :------------------------------------------ | :------------------------------------------------------------------------------- |
-| `@nestjs/common`                         | ^11.0.1          | Framework HTTP                              | **Moyen** \- API publique stable, breaking changes annoncés en `CHANGELOG`       |
-| `@nestjs/jwt`                            | ^11.0.2          | Génération / vérification JWT               | **Élevé** \- impacte l'authentification, tester login \+ guard après mise à jour |
-| `@nestjs/schedule`                       | ^6.1.3           | Cron CRON (nettoyage fichiers expirés)      | **Faible** \- API stable                                                         |
-| `@prisma/client` \+ `prisma`             | ^6.19.3          | ORM PostgreSQL                              | **Élevé** \- migrations potentiellement requises, tester toutes les requêtes     |
-| `bcrypt`                                 | ^6.0.0           | Hachage mots de passe \+ passwords fichiers | **Élevé** \- librairie de sécurité, vérifier les advisories avant mise à jour    |
-| `class-validator` \+ `class-transformer` | ^0.15.1 / ^0.5.1 | Validation DTOs                             | **Moyen** \- `ValidationPipe` peut changer de comportement                       |
-| `multer`                                 | ^2.1.1           | Upload fichiers multipart                   | **Moyen** \- vérifier la compatibilité NestJS Platform Express                   |
-| `cookie-parser`                          | ^1.4.7           | Lecture cookies httpOnly                    | **Faible** \- API stable                                                         |
+| `@nestjs/common`                         | ^11.0.1          | Framework HTTP                              | **Moyen** - API publique stable, breaking changes annoncés en `CHANGELOG`       |
+| `@nestjs/jwt`                            | ^11.0.2          | Génération / vérification JWT               | **Élevé** - impacte l'authentification, tester login + guard après mise à jour |
+| `@nestjs/schedule`                       | ^6.1.3           | Cron CRON (nettoyage fichiers expirés)      | **Faible** - API stable                                                         |
+| `@prisma/client` + `prisma`             | ^6.19.3          | ORM PostgreSQL                              | **Élevé** - migrations potentiellement requises, tester toutes les requêtes     |
+| `bcrypt`                                 | ^6.0.0           | Hachage mots de passe + passwords fichiers | **Élevé** - librairie de sécurité, vérifier les advisories avant mise à jour    |
+| `class-validator` + `class-transformer` | ^0.15.1 / ^0.5.1 | Validation DTOs                             | **Moyen** - `ValidationPipe` peut changer de comportement                       |
+| `multer`                                 | ^2.1.1           | Upload fichiers multipart                   | **Moyen** - vérifier la compatibilité NestJS Platform Express                   |
+| `cookie-parser`                          | ^1.4.7           | Lecture cookies httpOnly                    | **Faible** - API stable                                                         |
 
-2. ## Dev uniquement (`devDependencies` \- pas d'impact production) {#dev-uniquement-(devdependencies---pas-d'impact-production)}
+## 2. Dev uniquement (`devDependencies` - pas d'impact production)
 
 | Package                     | Version           | Rôle                                                           |
 | :-------------------------- | :---------------- | :------------------------------------------------------------- |
-| `jest` \+ `ts-jest`         | ^30.0.0 / ^29.2.5 | Tests unitaires, intégration, e2e                              |
+| `jest` + `ts-jest`         | ^30.0.0 / ^29.2.5 | Tests unitaires, intégration, e2e                              |
 | `newman-reporter-htmlextra` | ^1.23.1           | Rapport HTML tests Newman (vulnérable, usage local uniquement) |
 | `typescript`                | ^5.7.3            | Compilation TypeScript                                         |
 
 ---
 
-# 3\. Fréquence de mise à jour recommandée {#3.-fréquence-de-mise-à-jour-recommandée}
+# 3. Fréquence de mise à jour recommandée
 
 | Type              | Fréquence        | Déclencheur                       | Procédure                                                                 |
 | :---------------- | :--------------- | :-------------------------------- | :------------------------------------------------------------------------ |
 | **Patch** (x.y.Z) | À chaque release | CVE, `npm audit` critique         | `npm update` → vérifier `npm audit` → relancer `npm run test:integration` |
-| **Minor** (x.Y.z) | Mensuelle        | Dépendance de sécurité principale | Mettre à jour \+ relancer la suite complète (unit \+ integration \+ e2e)  |
+| **Minor** (x.Y.z) | Mensuelle        | Dépendance de sécurité principale | Mettre à jour + relancer la suite complète (unit + integration + e2e)  |
 | **Major** (X.y.z) | Sur décision     | Fin de support, incompatibilité   | Lire le CHANGELOG, ouvrir une branche dédiée, tester exhaustivement       |
 
 ---
 
-# 4\. Procédure de mise à jour standard {#4.-procédure-de-mise-à-jour-standard}
+# 4. Procédure de mise à jour standard
 
-1. ## Vérifier l'état avant mise à jour {#vérifier-l'état-avant-mise-à-jour}
+## 1. Vérifier l'état avant mise à jour
 
 - `npm audit`
 - `npm outdated`
 
-2. ## Mettre à jour (patch/minor) {#mettre-à-jour-(patch/minor)}
+## 2. Mettre à jour (patch/minor)
 
 - `npm update`
 
-3. ## Vérifier qu'aucune régression n'est introduite {#vérifier-qu'aucune-régression-n'est-introduite}
+## 3. Vérifier qu'aucune régression n'est introduite
 
 - `npm run test`
 - `npm run test:integration`
 - `npm run test:e2e:cov`
 
-4. ## Vérifier la compilation TypeScript {#vérifier-la-compilation-typescript}
+## 4. Vérifier la compilation TypeScript
 
 - `npx tsc --noEmit`
 
-5. ## Vérifier l'audit après mise à jour {#vérifier-l'audit-après-mise-à-jour}
+## 5. Vérifier l'audit après mise à jour
 
 - `npm audit`
 
@@ -138,20 +94,20 @@ Packages affectés : flatted ≤3.4.1, handlebars 4.0.0–4.7.8, jose 3.0.0–4.
 
 ---
 
-# 5\. Procédures spécifiques par package {#5.-procédures-spécifiques-par-package}
+# 5. Procédures spécifiques par package
 
-1. ## `bcrypt` \- hachage mots de passe {#bcrypt---hachage-mots-de-passe}
+## 1. `bcrypt` - hachage mots de passe
 
 Utilisé dans `auth.service.ts` (hachage password utilisateur) et `files.service.ts` (hachage password de téléchargement).
 
 - Avant toute mise à jour : vérifier les advisories GitHub (`npm audit`, CVE)
-- Après mise à jour : tester `POST /auth/register` \+ `POST /auth/login` \+ upload avec password \+ download avec password
+- Après mise à jour : tester `POST /auth/register` + `POST /auth/login` + upload avec password + download avec password
 
-`bcrypt` v6 est compatible avec les hachages générés par v5 \- pas de migration BDD nécessaire entre versions mineures
+`bcrypt` v6 est compatible avec les hachages générés par v5 - pas de migration BDD nécessaire entre versions mineures
 
-2. ## `prisma` \+ `@prisma/client` {#prisma-+-@prisma/client}
+## 2. `prisma` + `@prisma/client`
 
-- Mettre à jour les deux en même temps \- les versions doivent être identiques
+- Mettre à jour les deux en même temps - les versions doivent être identiques
 - Après mise à jour, vérifier qu'aucune migration automatique n'est déclenchée : `npx prisma migrate status`
 - Si migration requise, valider sur la BDD de dev avant le déploiement
 
@@ -159,7 +115,7 @@ Utilisé dans `auth.service.ts` (hachage password utilisateur) et `files.service
 * npx prisma migrate status
 * npm run test:integration
 
-3. ## `@nestjs/jwt` {#@nestjs/jwt}
+## 3. `@nestjs/jwt`
 
 Impacte directement l'authentification. Après mise à jour :
 
@@ -169,16 +125,16 @@ Impacte directement l'authentification. Après mise à jour :
 
 - npm run test:e2e:cov
 
-4. ## `newman-reporter-htmlextra` {#newman-reporter-htmlextra}
+## 4. `newman-reporter-htmlextra`
 
-Vulnérabilités présentes (handlebars, flatted, lodash) \- uniquement utilisé pour générer les rapports HTML des tests Postman en local. Pas d'exposition en production ni en CI.
+Vulnérabilités présentes (handlebars, flatted, lodash) - uniquement utilisé pour générer les rapports HTML des tests Postman en local. Pas d'exposition en production ni en CI.
 
 - Ne pas appliquer `npm audit fix --force` sans vérifier que les rapports Newman sont toujours générés
 - Alternative : basculer sur `newman-reporter-html` si les vulnérabilités deviennent bloquantes
 
 ---
 
-# 6\. Surveillance en production {#6.-surveillance-en-production}
+# 6. Surveillance en production
 
 | Signal                                                                  | Action                                         |
 | :---------------------------------------------------------------------- | :--------------------------------------------- |

@@ -14,10 +14,4 @@ services:
 
 volumes:
   postgres_data:
-  # TODO (hors MVP) : si NestJS tourne lui aussi dans un container Docker,
-  # ajouter un volume pour uploads/ pour que les fichiers survivent aux redémarrages :
-  #   uploads_data:
-  # et dans le service NestJS :
-  #   volumes:
-  #     - uploads_data:/app/uploads
-  # Sans ça, un restart du container efface tous les fichiers uploadés.
+  # uploads_data: # à activer si NestJS est conteneurisé — préserve les fichiers uploadés entre redémarrages

@@ -1,4 +1,4 @@
-# CHANGELOG 9 — Auth hybride : GET /auth/me + constants centralisées + comparePassword
+# CHANGELOG9 - feat/api (auth hybride GET /auth/me) - back
 
 ## Feature — `GET /auth/me` (session verification)
 

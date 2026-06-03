@@ -94,6 +94,19 @@ cp .env.example .env
 # Ajuster les valeurs dans .env si nécessaire
 ```
 
+## Lancement
+
+```bash
+# 1. Démarrer PostgreSQL
+docker compose up -d
+
+# 2. Appliquer les migrations Prisma
+npx prisma migrate deploy
+
+# 3. Démarrer l'API NestJS
+npm run start:dev   # -> http://localhost:3000
+```
+
 ## Variables d'environnement (`.env`)
 
 ```env
