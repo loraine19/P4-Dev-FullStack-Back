@@ -1,9 +1,9 @@
 import { ArgumentsHost, Catch, ExceptionFilter, HttpStatus } from '@nestjs/common';
 import type { Request, Response } from 'express';
 import { MulterError } from 'multer';
-import { ApiResponse } from '../helpers/api-response';
-import { LoggerService } from '../logger/logger.service';
-import { ERROR_MESSAGES } from '../constants/error-messages';
+import { ApiResponse } from '../common/helpers/api-response';
+import { LoggerService } from '../common/logger/logger.service';
+import { ERROR_MESSAGES } from '../common/constants/error-messages';
 
 @Catch(MulterError)
 export class MulterExceptionFilter implements ExceptionFilter {

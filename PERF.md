@@ -4,18 +4,19 @@
 
 ## 1. Contexte
 
-| Paramètre         | Valeur                                                                    |
-| :---------------- | :------------------------------------------------------------------------ |
+| Paramètre         | Valeur                                                                   |
+| :---------------- | :----------------------------------------------------------------------- |
 | Outils            | **k6 v2.0.0** (tests de charge) + **Newman** (performance fonctionnelle) |
-| Date              | 28/05/2026                                                                |
-| Backend           | NestJS 11, PostgreSQL 16, env local                                       |
+| Date              | 28/05/2026                                                               |
+| Backend           | NestJS 11, PostgreSQL 16, env local                                      |
 | Script k6         | `perf/k6-load.js` - 3 scénarios, 30 VUs max, 91s                         |
-| Résultats k6      | 1 480 requêtes · 1 329 itérations · 0 erreur · 1 405/1 405 checks ✅      |
-| Collection Newman | 16 requêtes, 25 assertions, 2.1s                                          |
+| Résultats k6      | 1 480 requêtes · 1 329 itérations · 0 erreur · 1 405/1 405 checks ✅     |
+| Collection Newman | 16 requêtes, 25 assertions, 2.1s                                         |
 
 ---
 
 ## 2. Tests de charge - k6
+
 ### 1. Configuration
 
 | Scénario      | Endpoint                     | VUs | Durée | Démarrage |
@@ -40,11 +41,11 @@
 
 | Threshold                       | Valeur cible | Résultat     |
 | :------------------------------ | :----------- | :----------- |
-| `get_files_duration_ms` p(95)   | < 200 ms    | ✅ 67.64 ms  |
-| `upload_anon_duration_ms` p(95) | < 2 000 ms  | ✅ 1 840 ms  |
-| `login_duration_ms` p(95)       | < 500 ms    | ✅ 139.28 ms |
-| `errors`                        | < 5 %       | ✅ 0.00 %    |
-| `http_req_failed`               | < 5 %       | ✅ 0.00 %    |
+| `get_files_duration_ms` p(95)   | < 200 ms     | ✅ 67.64 ms  |
+| `upload_anon_duration_ms` p(95) | < 2 000 ms   | ✅ 1 840 ms  |
+| `login_duration_ms` p(95)       | < 500 ms     | ✅ 139.28 ms |
+| `errors`                        | < 5 %        | ✅ 0.00 %    |
+| `http_req_failed`               | < 5 %        | ✅ 0.00 %    |
 
 ### 4. Résumé global k6
 
@@ -62,6 +63,7 @@
 ##
 
 ## 3. Tests de performance détaillés - Newman
+
 ### 1. Upload (POST /api/v1/files)
 
 | Endpoint                     | Temps réponse | Taille réponse |
@@ -80,6 +82,7 @@
 
 - Pas de guard JWT : gain direct sur le middleware
 - Flux Multer + Prisma identique
+
 ### 2. Download (POST /api/v1/download/:token)
 
 | Endpoint                                  | Temps réponse | Taille réponse |
@@ -93,17 +96,18 @@
 - SELECT Prisma sur shareToken (index UUID) : ~10ms
 - Vérification existence fichier sur disque : ~5ms
 - Streaming du fichier + header Content-Disposition : ~16ms
+
 ### 3. Autres endpoints
 
-| Endpoint              | Temps réponse | Note                                        |
-| :-------------------- | :------------ | :------------------------------------------ |
+| Endpoint              | Temps réponse | Note                                       |
+| :-------------------- | :------------ | :----------------------------------------- |
 | POST /auth/register   | 383 ms        | bcrypt.hash 10 rounds - coûteux par design |
 | POST /auth/login      | 256 ms        | bcrypt.compare + JWT sign                  |
-| GET /files (liste)    | 25 ms         | SELECT filtré par userId                    |
+| GET /files (liste)    | 25 ms         | SELECT filtré par userId                   |
 | POST /tags (création) | 44 ms         | INSERT + vérif contrainte unique           |
-| GET /tags (liste)     | 32 ms         | SELECT WHERE userId                         |
+| GET /tags (liste)     | 32 ms         | SELECT WHERE userId                        |
 | DELETE /tags/:id      | 39 ms         | vérif propriété + DELETE                   |
-| POST /auth/logout     | 37 ms         | invalidation token côté client              |
+| POST /auth/logout     | 37 ms         | invalidation token côté client             |
 
 ### 4. Résumé global Newman
 
@@ -157,7 +161,7 @@ Le backend utilise un `LoggerService` custom (étend `ConsoleLogger` de NestJS) 
 
 | Métrique observée     | Source log                      | Valeur / état |
 | :-------------------- | :------------------------------ | :------------ |
-| Démarrage application | `[NestFactory] Starting...`     | < 3s en dev  |
+| Démarrage application | `[NestFactory] Starting...`     | < 3s en dev   |
 | Routes mappées        | `[RouterExplorer] Mapped {…}`   | 12 routes API |
 | Erreurs 500           | `[ErrorFilter] 500:`            | 0 en prod     |
 | Connexions DB         | `[InstanceLoader] PrismaModule` | ✅ initialisé |
@@ -191,6 +195,6 @@ Build de production réalisé avec `npm run build` (Vite + Rolldown) :
 
 | Priorité | Problème                     | Action suggérée                              |
 | :------- | :--------------------------- | :------------------------------------------- |
-| Basse    | Bundle JS > 500 kB          | Lazy loading routes avec `React.lazy()`      |
-| Basse    | Register/Login > 200 ms     | Normal avec bcrypt - acceptable en prod     |
+| Basse    | Bundle JS > 500 kB           | Lazy loading routes avec `React.lazy()`      |
+| Basse    | Register/Login > 200 ms      | Normal avec bcrypt - acceptable en prod      |
 | Future   | Pas de monitoring temps réel | Ajouter métriques Prometheus/Grafana en prod |

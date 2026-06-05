@@ -5,7 +5,7 @@ import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { PrismaExceptionFilter } from './common/filters/prisma-exception.filter';
 import { ErrorFilter } from './common/filters/error.filter';
-import { MulterExceptionFilter } from './common/filters/multer-exception.filter';
+import { MulterExceptionFilter } from './multer/multer-exception.filter';
 import { LoggerService } from './common/logger/logger.service';
 
 async function bootstrap() {

@@ -1,5 +1,4 @@
 import {
-  BadRequestException,
   Controller,
   Delete,
   Get,
@@ -13,9 +12,6 @@ import {
   Body,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
-import * as path from 'path';
-import * as crypto from 'crypto';
 import { FilesService } from './files.service';
 import { UploadFileDto } from './dto/upload-file.dto';
 import type { MulterFile } from './interfaces/multer-file.types';
@@ -25,26 +21,7 @@ import { OptionalJwtAuthGuard } from '../common/guards/optional-jwt-auth.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { ApiResponse, type IApiResponse } from '../common/helpers/api-response';
 import { SUCCESS_MESSAGES } from '../common/constants/success-messages';
-import { ERROR_MESSAGES } from '../common/constants/error-messages';
-import { FORBIDDEN_EXTENSIONS, MAX_FILE_SIZE } from '../common/constants/upload';
-import { UPLOADS_DIR } from '../common/constants/paths';
-
-const multerOptions = {
-  storage: diskStorage({
-    destination: UPLOADS_DIR,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    filename: (_req: any, file: Express.Multer.File, cb: (error: Error | null, filename: string) => void) =>
-      cb(null, `${crypto.randomUUID()}${path.extname(file.originalname)}`),
-  }),
-  limits: { fileSize: MAX_FILE_SIZE },
-  // validates extension before multer writes to disk
-  fileFilter: (_req: Express.Request, file: Express.Multer.File, cb: (error: Error | null, accept: boolean) => void) => {
-    const ext = path.extname(file.originalname).slice(1).toLowerCase();
-    if (!ext || FORBIDDEN_EXTENSIONS.has(ext))
-      return cb(new BadRequestException(ERROR_MESSAGES.FILES.INVALID_EXTENSION), false);
-    cb(null, true);
-  },
-};
+import { multerOptions } from '../multer/multer.config';
 
 @Controller('files')
 export class FilesController {

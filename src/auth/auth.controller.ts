@@ -21,7 +21,7 @@ import { COOKIE_NAME, COOKIE_MAX_AGE } from '../common/constants/security';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(private readonly authService: AuthService) { }
 
   /* SET COOKIE */
   private setCookie(res: Response, token: string): void {
@@ -76,10 +76,8 @@ export class AuthController {
     @CurrentUser() userId: number,
     @Res({ passthrough: true }) res: Response,
   ): Promise<IApiResponse<null>> {
-   await this.authService.logout(userId);
+    await this.authService.logout(userId);
     this.clearCookie(res);
-    const debug = ApiResponse.success(SUCCESS_MESSAGES.AUTH.LOGOUT);
-    console.log('debug', debug);
-    return(debug)
+    return ApiResponse.success(SUCCESS_MESSAGES.AUTH.LOGOUT);
   }
 }

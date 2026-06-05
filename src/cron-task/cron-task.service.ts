@@ -46,7 +46,7 @@ export class CronTaskService {
   /* SCAN ORPHAN FILES */
   // runs once per night at 3am - staggered from deleteExpiredFiles to avoid concurrent DB+disk contention
   // deletes files on disk not referenced in DB for more than 7 days
-  @Cron('0 3 * * *')
+  @Cron(CronExpression.EVERY_DAY_AT_3AM)
   async scanOrphanFiles() {
     if (!fs.existsSync(this.uploadsDir)) return;
 
