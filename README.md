@@ -43,6 +43,7 @@ src/
 │   ├── constants/
 │   │   ├── error-messages.ts
 │   │   ├── success-messages.ts
+│   │   ├── paths.ts
 │   │   ├── security.ts           ← PASSWORD_MIN_LENGTH · FILE_PASSWORD_MIN_LENGTH · BCRYPT_ROUNDS
 │   │   └── upload.ts             ← MAX_FILE_SIZE · FORBIDDEN_EXTENSIONS
 │   ├── decorators/
@@ -55,7 +56,8 @@ src/
 │   │   ├── jwt-auth.guard.ts         ← JWT manuel (sans Passport)
 │   │   └── optional-jwt-auth.guard.ts
 │   ├── helpers/
-│   │   └── api-response.ts
+│   │   ├── api-response.ts
+│   │   └── hash.ts
 │   ├── interfaces/
 │   │   ├── jwt-payload.interface.ts
 │   │   └── request-with-user.interface.ts
@@ -64,7 +66,8 @@ src/
 │   │   └── logger.service.ts
 │   └── middlewares/
 │       └── logger.middleware.ts
-├── cron-task/                    ← Suppression fichiers expirés (EVERY_HOUR)
+├── multer/                       ← Config diskStorage + MulterExceptionFilter
+├── cron-task/                    ← Nettoyage BDD+disque (2h) · Orphelins disque (3h)
 ├── auth/                         ← Register / Login / Logout → JWT
 ├── files/                        ← Upload / Liste / Suppression
 ├── download/                     ← Téléchargement via shareToken (public)
@@ -92,19 +95,6 @@ Request → Guard → Controller → Service → PrismaService → PostgreSQL
 npm install
 cp .env.example .env
 # Ajuster les valeurs dans .env si nécessaire
-```
-
-## Lancement
-
-```bash
-# 1. Démarrer PostgreSQL
-docker compose up -d
-
-# 2. Appliquer les migrations Prisma
-npx prisma migrate deploy
-
-# 3. Démarrer l'API NestJS
-npm run start:dev   # -> http://localhost:3000
 ```
 
 ## Variables d'environnement (`.env`)
