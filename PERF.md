@@ -7,7 +7,7 @@
 | Paramètre         | Valeur                                                                   |
 | :---------------- | :----------------------------------------------------------------------- |
 | Outils            | **k6 v2.0.0** (tests de charge) + **Newman** (performance fonctionnelle) |
-| Date              | 28/05/2026                                                               |
+| Date              | 05/06/2026                                                               |
 | Backend           | NestJS 11, PostgreSQL 16, env local                                      |
 | Script k6         | `perf/k6-load.js` - 3 scénarios, 30 VUs max, 91s                         |
 | Résultats k6      | 1 480 requêtes · 1 329 itérations · 0 erreur · 1 405/1 405 checks ✅     |
@@ -176,8 +176,8 @@ Build de production réalisé avec `npm run build` (Vite + Rolldown) :
 | Fichier             | Taille brute | Taille gzip   |
 | :------------------ | :----------- | :------------ |
 | `dist/index.html`   | 0.45 kB      | 0.29 kB       |
-| `dist/assets/*.css` | 18.33 kB     | **4.92 kB**   |
-| `dist/assets/*.js`  | 509.83 kB    | **156.71 kB** |
+| `dist/assets/*.css` | 20.57 kB     | **5.37 kB**   |
+| `dist/assets/*.js`  | 519.25 kB    | **159.60 kB** |
 
 **Avertissement Vite :** le chunk JS dépasse 500 kB minifié.
 
